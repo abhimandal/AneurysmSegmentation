@@ -87,7 +87,8 @@ def read_mesh_vertices(filename):
         # vertices[:, 2] = plydata["vertex"].data["z"]
         
         vertices = np.empty((0, df.shape[1]), dtype=np.float32)
-        vertices = np.vstack((vertices, df.iloc[:, 0:3].astype(np.float32)))
+        #Stack all the vertices
+        vertices = np.vstack((vertices, df.iloc[:, :].astype(np.float32)))
         
 
     return vertices

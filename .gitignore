@@ -6,42 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# Custom
-/datasets/notebooks/*checkpoints
-/datasets/notebooks/*.html
-.ipynb_checkpoints
-_build
-
-/data/
-*.pyc
-__pycache__
-.vscode
-*outputs*
-wandb
-logs
-results
-site
-*.DS_Store
-kernels/dispositions/*
-notebooks/*checkpoints
-/notebooks/*.html
-
-
-# Python egg metadata, regenerated from source files by setuptools.
-/*.egg
-build/*
-dist/*
-.venv
-.mypy_cache
-lightning_logs
-/data
-.tox
-tp3d
-eval
-cv_s3dis_models/
-test/test_data
-.python-version
-
 # Distribution / packaging
 .Python
 build/

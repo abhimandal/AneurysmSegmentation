@@ -5,14 +5,20 @@ import json
 from tqdm.auto import tqdm as tq
 from itertools import repeat, product
 import numpy as np
+import pandas as pd
 import torch
 
 from torch_geometric.data import Data, InMemoryDataset, extract_zip
 from torch_geometric.io import read_txt_array
 import torch_geometric.transforms as T
 from torch_points3d.core.data_transform import SaveOriginalPosId
-from torch_points3d.metrics.shapenet_part_tracker import ShapenetPartTracker
-from torch_points3d.datasets.base_dataset import BaseDataset, save_used_properties
+from torch_points3d.metrics.shapenet_part_tracker import (
+    ShapenetPartTracker,
+)
+from torch_points3d.datasets.base_dataset import (
+    BaseDataset,
+    save_used_properties,
+)
 from torch_points3d.utils.download import download_url
 from plyfile import PlyData, PlyElement, PlyProperty, PlyListProperty
 
@@ -47,20 +53,29 @@ from plyfile import PlyData, PlyElement, PlyProperty, PlyListProperty
 
 def convert_mesh_to_dataframe(meshply):
     """Convert mesh values into a dataframe and add feature_names"""
-    
-    df = pd.DataFrame()
-    df['x'] = pd.Series(meshply.elements[0].data['x'])
-    df['y'] = pd.Series(meshply.elements[0].data['y'])
-    df['z'] = pd.Series(meshply.elements[0].data['z'])
-    
-    df['WSS'] = pd.Series(meshply.elements[0].data['WSS'])
-    df['mean_curv'] = pd.Series(meshply.elements[0].data['mean_curv'])
-    df['gauss_curv'] = pd.Series(meshply.elements[0].data['gauss_curv'])
 
-    df[['fpfh_1','fpfh_2']] = pd.DataFrame(meshply.elements[0].data['fpfh'].tolist())
-    df[['shot_1','shot_2','shot_3']] = pd.DataFrame(meshply.elements[0].data['shot'].tolist())
-    df[['rf_1','rf_2','rf_3']] = pd.DataFrame(meshply.elements[0].data['rf'].tolist())
+    df = pd.DataFrame()
+    df["x"] = pd.Series(meshply.elements[0].data["x"])
+    df["y"] = pd.Series(meshply.elements[0].data["y"])
+    df["z"] = pd.Series(meshply.elements[0].data["z"])
+
+    df["WSS"] = pd.Series(meshply.elements[0].data["WSS"])
+    df["mean_curv"] = pd.Series(meshply.elements[0].data["mean_curv"])
+    df["gauss_curv"] = pd.Series(
+        meshply.elements[0].data["gauss_curv"]
+    )
+
+    df[["fpfh_1", "fpfh_2"]] = pd.DataFrame(
+        meshply.elements[0].data["fpfh"].tolist()
+    )
+    df[["shot_1", "shot_2", "shot_3"]] = pd.DataFrame(
+        meshply.elements[0].data["shot"].tolist()
+    )
+    df[["rf_1", "rf_2", "rf_3"]] = pd.DataFrame(
+        meshply.elements[0].data["rf"].tolist()
+    )
     return df
+
 
 def read_mesh_vertices(filename):
     """read XYZ and features for each vertex in numpy ndarray
@@ -78,38 +93,35 @@ def read_mesh_vertices(filename):
     assert os.path.isfile(filename)
     with open(filename, "rb") as f:
         meshplydata = PlyData.read(f)
-        num_verts = plydata["vertex"].count
+        num_verts = meshplydata["vertex"].count
         df = convert_mesh_to_dataframe(meshplydata)
-        
+
         # vertices = np.zeros(shape=[num_verts, 3], dtype=np.float32)
         # vertices[:, 0] = plydata["vertex"].data["x"]
         # vertices[:, 1] = plydata["vertex"].data["y"]
         # vertices[:, 2] = plydata["vertex"].data["z"]
-        
+
         vertices = np.empty((0, df.shape[1]), dtype=np.float32)
-        #Stack all the vertices
-        vertices = np.vstack((vertices, df.iloc[:, :].astype(np.float32)))
-        
+        # Stack all the vertices
+        vertices = np.vstack(
+            (vertices, df.iloc[:, :].astype(np.float32))
+        )
 
     return vertices
 
-class IA_WSS_Dataset(InMemoryDataset):
-    r"""The ShapeNet part level segmentation dataset from the `"A Scalable
-    Active Framework for Region Annotation in 3D Shape Collections"
-    <http://web.stanford.edu/~ericyi/papers/part_annotation_16_small.pdf>`_
-    paper, containing about 17,000 3D shape point clouds from 16 shape
-    categories.
-    Each category is annotated with 2 to 6 parts.
+
+class Aneurysm(InMemoryDataset):
+    r""" Aneurysm dataset for part-level segmentation which corresponds to 
+    different WSS regions in one patient file
+    
+    
+    Each file has with 2 to 5 parts/regions based on WSS values. 
 
     Args:
         root (string): Root directory where the dataset should be saved.
         categories (string or [string], optional): The category of the CAD
             models (one or a combination of :obj:`"Airplane"`, :obj:`"Bag"`,
-            :obj:`"Cap"`, :obj:`"Car"`, :obj:`"Chair"`, :obj:`"Earphone"`,
-            :obj:`"Guitar"`, :obj:`"Knife"`, :obj:`"Lamp"`, :obj:`"Laptop"`,
-            :obj:`"Motorbike"`, :obj:`"Mug"`, :obj:`"Pistol"`, :obj:`"Rocket"`,
-            :obj:`"Skateboard"`, :obj:`"Table"`).
-            Can be explicitly set to :obj:`None` to load all categories.
+            :obj:`"Cap"`, :obj:`"Car"`, :obj:`"Chair"`, :obj:`"Earphone"`
             (default: :obj:`None`)
         include_normals (bool, optional): If set to :obj:`False`, will not
             include normal vectors as input features. (default: :obj:`True`)
@@ -160,11 +172,15 @@ class IA_WSS_Dataset(InMemoryDataset):
             categories = list(self.category_ids.keys())
         if isinstance(categories, str):
             categories = [categories]
-        assert all(category in self.category_ids for category in categories)
+        assert all(
+            category in self.category_ids for category in categories
+        )
         self.categories = categories
         self.is_test = is_test
 
-        super(IA_WSS_Dataset, self).__init__(None, transform, pre_transform, pre_filter)
+        super(Aneurysm, self).__init__(
+            None, transform, pre_transform, pre_filter
+        )
 
         if split == "train":
             path = self.processed_paths[0]
@@ -186,7 +202,9 @@ class IA_WSS_Dataset(InMemoryDataset):
                 )
             )
 
-        self.data, self.slices, self.y_mask = self.load_data(path, include_normals)
+        self.data, self.slices, self.y_mask = self.load_data(
+            path, include_normals
+        )
 
         # We have perform a slighly optimzation on memory space if no pre-transform was used.
         # c.f self._process_filenames
@@ -203,7 +221,9 @@ class IA_WSS_Dataset(InMemoryDataset):
         data, slices = torch.load(path)
         data.x = data.x if include_normals else None
 
-        y_mask = torch.zeros((len(self.seg_classes.keys()), 50), dtype=torch.bool)
+        y_mask = torch.zeros(
+            (len(self.seg_classes.keys()), 50), dtype=torch.bool
+        )
         for i, labels in enumerate(self.seg_classes.values()):
             y_mask[i, labels] = 1
 
@@ -217,7 +237,9 @@ class IA_WSS_Dataset(InMemoryDataset):
     def processed_raw_paths(self):
         cats = "_".join([cat[:3].lower() for cat in self.categories])
         processed_raw_paths = [
-            os.path.join(self.processed_dir, "raw_{}_{}".format(cats, s))
+            os.path.join(
+                self.processed_dir, "raw_{}_{}".format(cats, s)
+            )
             for s in ["train", "val", "test", "trainval"]
         ]
         return processed_raw_paths
@@ -263,8 +285,12 @@ class IA_WSS_Dataset(InMemoryDataset):
     def _process_filenames(self, filenames):
         data_raw_list = []
         data_list = []
-        categories_ids = [self.category_ids[cat] for cat in self.categories]
-        cat_idx = {categories_ids[i]: i for i in range(len(categories_ids))}
+        categories_ids = [
+            self.category_ids[cat] for cat in self.categories
+        ]
+        cat_idx = {
+            categories_ids[i]: i for i in range(len(categories_ids))
+        }
 
         has_pre_transform = self.pre_transform is not None
 
@@ -278,13 +304,28 @@ class IA_WSS_Dataset(InMemoryDataset):
             pos = data[:, :3]
             x = data[:, 3:6]
             y = data[:, -1].type(torch.long)
-            category = torch.ones(x.shape[0], dtype=torch.long) * cat_idx[cat]
-            id_scan_tensor = torch.from_numpy(np.asarray([id_scan])).clone()
-            data = Data(pos=pos, x=x, y=y, category=category, id_scan=id_scan_tensor)
+            category = (
+                torch.ones(x.shape[0], dtype=torch.long)
+                * cat_idx[cat]
+            )
+            id_scan_tensor = torch.from_numpy(
+                np.asarray([id_scan])
+            ).clone()
+            data = Data(
+                pos=pos,
+                x=x,
+                y=y,
+                category=category,
+                id_scan=id_scan_tensor,
+            )
             data = SaveOriginalPosId()(data)
-            if self.pre_filter is not None and not self.pre_filter(data):
+            if self.pre_filter is not None and not self.pre_filter(
+                data
+            ):
                 continue
-            data_raw_list.append(data.clone() if has_pre_transform else data)
+            data_raw_list.append(
+                data.clone() if has_pre_transform else data
+            )
             if has_pre_transform:
                 data = self.pre_transform(data)
                 data_list.append(data)
@@ -315,13 +356,18 @@ class IA_WSS_Dataset(InMemoryDataset):
         trainval = []
         for i, split in enumerate(["train", "val", "test"]):
             path = osp.join(
-                self.raw_dir, "train_test_split", f"shuffled_{split}_file_list.json"
+                self.raw_dir,
+                "train_test_split",
+                f"shuffled_{split}_file_list.json",
             )
             with open(path, "r") as f:
                 filenames = [
-                    osp.sep.join(name.split("/")[1:]) + ".txt" for name in json.load(f)
+                    osp.sep.join(name.split("/")[1:]) + ".txt"
+                    for name in json.load(f)
                 ]  # Removing first directory.
-            data_raw_list, data_list = self._process_filenames(sorted(filenames))
+            data_raw_list, data_list = self._process_filenames(
+                sorted(filenames)
+            )
             if split == "train" or split == "val":
                 if len(data_raw_list) > 0:
                     raw_trainval.append(data_raw_list)
@@ -334,7 +380,9 @@ class IA_WSS_Dataset(InMemoryDataset):
                 save_bool=len(data_raw_list) > 0,
             )
 
-        self._save_data_list(self._re_index_trainval(trainval), self.processed_paths[3])
+        self._save_data_list(
+            self._re_index_trainval(trainval), self.processed_paths[3]
+        )
         self._save_data_list(
             self._re_index_trainval(raw_trainval),
             self.processed_raw_paths[3],
@@ -347,8 +395,8 @@ class IA_WSS_Dataset(InMemoryDataset):
         )
 
 
-class ShapeNetDataset(BaseDataset):
-    """ Wrapper around ShapeNet that creates train and test datasets.
+class AneurysmDataset(BaseDataset):
+    """ Wrapper around Aneurysm that creates train and test datasets.
 
     Parameters
     ----------
@@ -374,7 +422,7 @@ class ShapeNetDataset(BaseDataset):
         except KeyError:
             self._category = None
 
-        self.train_dataset = ShapeNet(
+        self.train_dataset = Aneurysm(
             self._data_path,
             self._category,
             include_normals=dataset_opt.normal,
@@ -384,7 +432,7 @@ class ShapeNetDataset(BaseDataset):
             is_test=is_test,
         )
 
-        self.val_dataset = ShapeNet(
+        self.val_dataset = Aneurysm(
             self._data_path,
             self._category,
             include_normals=dataset_opt.normal,
@@ -394,7 +442,7 @@ class ShapeNetDataset(BaseDataset):
             is_test=is_test,
         )
 
-        self.test_dataset = ShapeNet(
+        self.test_dataset = Aneurysm(
             self._data_path,
             self._category,
             include_normals=dataset_opt.normal,
@@ -410,7 +458,7 @@ class ShapeNetDataset(BaseDataset):
     def class_to_segments(self):
         classes_to_segment = {}
         for key in self._categories:
-            classes_to_segment[key] = ShapeNet.seg_classes[key]
+            classes_to_segment[key] = Aneurysm.seg_classes[key]
         return classes_to_segment
 
     @property

@@ -14,7 +14,7 @@ from torch_points3d.core.data_transform import SaveOriginalPosId
 from torch_points3d.metrics.shapenet_part_tracker import ShapenetPartTracker
 from torch_points3d.datasets.base_dataset import BaseDataset, save_used_properties
 from torch_points3d.utils.download import download_url
-from plyfile import PlyData, PlyElement,PlyProperty, PlyListProperty
+from plyfile import PlyData, PlyElement, PlyProperty, PlyListProperty
 
 
 ########################################################################################
@@ -45,16 +45,51 @@ from plyfile import PlyData, PlyElement,PlyProperty, PlyListProperty
 #     return mapping
 
 
+def convert_mesh_to_dataframe(meshply):
+    """Convert mesh values into a dataframe and add feature_names"""
+    
+    df = pd.DataFrame()
+    df['x'] = pd.Series(meshply.elements[0].data['x'])
+    df['y'] = pd.Series(meshply.elements[0].data['y'])
+    df['z'] = pd.Series(meshply.elements[0].data['z'])
+    
+    df['WSS'] = pd.Series(meshply.elements[0].data['WSS'])
+    df['mean_curv'] = pd.Series(meshply.elements[0].data['mean_curv'])
+    df['gauss_curv'] = pd.Series(meshply.elements[0].data['gauss_curv'])
+
+    df[['fpfh_1','fpfh_2']] = pd.DataFrame(meshply.elements[0].data['fpfh'].tolist())
+    df[['shot_1','shot_2','shot_3']] = pd.DataFrame(meshply.elements[0].data['shot'].tolist())
+    df[['rf_1','rf_2','rf_3']] = pd.DataFrame(meshply.elements[0].data['rf'].tolist())
+    return df
+
 def read_mesh_vertices(filename):
-    """read XYZ for each vertex and features"""
+    """read XYZ and features for each vertex in numpy ndarray
+    
+    Example - 
+    If only XYZ to be populated then for 5 points, vertices will be:
+    
+    vertices = array([[ 0.02699408, -0.16551971, -0.12976472],
+                    [ 0.02701367, -0.16554399, -0.12981543],
+                    [ 0.02698801, -0.16551463, -0.12982164],
+                    [ 0.02702969, -0.16545248, -0.12979169],
+                    [ 0.02706531, -0.16538525, -0.12981866]], dtype=float32)
+    
+    """
     assert os.path.isfile(filename)
     with open(filename, "rb") as f:
-        plydata = PlyData.read(f)
+        meshplydata = PlyData.read(f)
         num_verts = plydata["vertex"].count
-        vertices = np.zeros(shape=[num_verts, 3], dtype=np.float32)
-        vertices[:, 0] = plydata["vertex"].data["x"]
-        vertices[:, 1] = plydata["vertex"].data["y"]
-        vertices[:, 2] = plydata["vertex"].data["z"]
+        df = convert_mesh_to_dataframe(meshplydata)
+        
+        # vertices = np.zeros(shape=[num_verts, 3], dtype=np.float32)
+        # vertices[:, 0] = plydata["vertex"].data["x"]
+        # vertices[:, 1] = plydata["vertex"].data["y"]
+        # vertices[:, 2] = plydata["vertex"].data["z"]
+        
+        vertices = np.empty((0, df.shape[1]), dtype=np.float32)
+        vertices = np.vstack((vertices, df.iloc[:, 0:3].astype(np.float32)))
+        
+
     return vertices
 
 class IA_WSS_Dataset(InMemoryDataset):
@@ -223,7 +258,7 @@ class IA_WSS_Dataset(InMemoryDataset):
     #         s = slice(start, end)
     #     data[key] = item[s]
     # return data
-    
+
     def _process_filenames(self, filenames):
         data_raw_list = []
         data_list = []

@@ -21,7 +21,11 @@ from torch_points3d.datasets.base_dataset import (
 )
 from torch_points3d.utils.download import download_url
 from plyfile import PlyData, PlyElement, PlyProperty, PlyListProperty
-
+from sklearn.preprocessing import (
+    StandardScaler,
+    MinMaxScaler,
+    MaxAbsScaler,
+)
 
 ########################################################################################
 #                                                                                      #
@@ -49,17 +53,31 @@ from plyfile import PlyData, PlyElement, PlyProperty, PlyListProperty
 #     if represents_int(list(mapping.keys())[0]):
 #         mapping = {int(k): v for k, v in mapping.items()}
 #     return mapping
+NUM_OF_PARTS = 5
+
+
+def scale_data(col: pd.Series, scaler) -> pd.Series:
+    """
+    Scale a column
+    """
+    X = col.values.reshape(-1, 1).copy()
+    scaled_array = scaler.fit_transform(X)
+
+    scaled_column = pd.Series(scaled_array.tolist()).explode()
+
+    return scaled_column
 
 
 def convert_mesh_to_dataframe(meshply):
-    """Convert mesh values into a dataframe and add feature_names"""
+    """
+    Convert mesh values into a dataframe and add feature_names
+    """
 
     df = pd.DataFrame()
     df["x"] = pd.Series(meshply.elements[0].data["x"])
     df["y"] = pd.Series(meshply.elements[0].data["y"])
     df["z"] = pd.Series(meshply.elements[0].data["z"])
 
-    df["WSS"] = pd.Series(meshply.elements[0].data["WSS"])
     df["mean_curv"] = pd.Series(meshply.elements[0].data["mean_curv"])
     df["gauss_curv"] = pd.Series(
         meshply.elements[0].data["gauss_curv"]
@@ -73,6 +91,29 @@ def convert_mesh_to_dataframe(meshply):
     )
     df[["rf_1", "rf_2", "rf_3"]] = pd.DataFrame(
         meshply.elements[0].data["rf"].tolist()
+    )
+    # WSS - Feature for Prediction
+    df["WSS"] = pd.Series(meshply.elements[0].data["WSS"])
+
+    # Process the dataframe
+    min_max_scaler = MinMaxScaler()
+    df["mean_curv"] = scale_data(df["mean_curv"], min_max_scaler)
+    df["gauss_curv"] = scale_data(df["gauss_curv"], min_max_scaler)
+    df["fpfh_1"] = scale_data(df["fpfh_1"], min_max_scaler)
+    df["fpfh_2"] = scale_data(df["fpfh_2"], min_max_scaler)
+    df["shot_1"] = scale_data(df["shot_1"], min_max_scaler)
+    df["shot_2"] = scale_data(df["shot_2"], min_max_scaler)
+    df["shot_3"] = scale_data(df["shot_3"], min_max_scaler)
+    df["rf_1"] = scale_data(df["rf_1"], min_max_scaler)
+    df["rf_2"] = scale_data(df["rf_2"], min_max_scaler)
+    df["rf_3"] = scale_data(df["rf_3"], min_max_scaler)
+    df["WSS"] = scale_data(df["WSS"], min_max_scaler)
+
+    # Catrgorize the WSS for segmentation
+    df["WSS"] = pd.cut(
+        df["WSS"],
+        bins=np.linspace(0, 1, NUM_OF_PARTS + 1),
+        labels=np.arange(0, NUM_OF_PARTS),
     )
     return df
 

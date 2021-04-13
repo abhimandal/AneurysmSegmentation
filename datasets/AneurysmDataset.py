@@ -53,7 +53,14 @@ from sklearn.preprocessing import (
 #     if represents_int(list(mapping.keys())[0]):
 #         mapping = {int(k): v for k, v in mapping.items()}
 #     return mapping
+
 NUM_OF_PARTS = 5
+# TODO: Add correct shuffled splits
+SHUFFLED_SPLITS = {
+    "train": ["4_BC", "5_BP"],
+    "val": ["2_BC", "9_BP"],
+    "test": ["13_CM", "18_BC"],
+}
 
 
 def scale_data(col: pd.Series, scaler) -> pd.Series:
@@ -109,16 +116,10 @@ def convert_mesh_to_dataframe(meshply):
     df["rf_3"] = scale_data(df["rf_3"], min_max_scaler)
     df["WSS"] = scale_data(df["WSS"], min_max_scaler)
 
-    # Catrgorize the WSS for segmentation
-    df["WSS"] = pd.cut(
-        df["WSS"],
-        bins=np.linspace(0, 1, NUM_OF_PARTS + 1),
-        labels=np.arange(0, NUM_OF_PARTS),
-    )
     return df
 
 
-def read_mesh_vertices(filename):
+def read_mesh_vertices(filepath):
     """read XYZ and features for each vertex in numpy ndarray
     
     Example - 
@@ -131,11 +132,18 @@ def read_mesh_vertices(filename):
                     [ 0.02706531, -0.16538525, -0.12981866]], dtype=float32)
     
     """
-    assert os.path.isfile(filename)
-    with open(filename, "rb") as f:
+    assert os.path.isfile(filepath)
+    with open(filepath, "rb") as f:
         meshplydata = PlyData.read(f)
         num_verts = meshplydata["vertex"].count
         df = convert_mesh_to_dataframe(meshplydata)
+
+        # Categorize the WSS to different parts for part-segmentation
+        df["WSS"] = pd.cut(
+            df["WSS"],
+            bins=np.linspace(0, 1, NUM_OF_PARTS + 1),
+            labels=np.arange(0, NUM_OF_PARTS),
+        )
 
         vertices = np.empty((0, df.shape[1]), dtype=np.float32)
         # Stack all the vertices
@@ -318,7 +326,7 @@ class Aneurysm(InMemoryDataset):
     #     data[key] = item[s]
     # return data
 
-    def _process_filenames(self, filenames):
+    def _process_filenames(self, filepaths):
         data_raw_list = []
         data_list = []
         categories_ids = [
@@ -331,14 +339,14 @@ class Aneurysm(InMemoryDataset):
         has_pre_transform = self.pre_transform is not None
 
         id_scan = -1
-        for name in tq(filenames):
-            cat = name.split(osp.sep)[0]
+        for filepath in tq(filepaths):
+            cat = filepath.split(osp.sep)[0]
             if cat not in categories_ids:
                 continue
             id_scan += 1
-            data = read_txt_array(osp.join(self.raw_dir, name))
+            data = torch.from_numpy(read_mesh_vertices(filepath))
             pos = data[:, :3]
-            x = data[:, 3:6]
+            x = data[:, 3:-1]
             y = data[:, -1].type(torch.long)
             category = (
                 torch.ones(x.shape[0], dtype=torch.long)
@@ -391,16 +399,21 @@ class Aneurysm(InMemoryDataset):
         raw_trainval = []
         trainval = []
         for i, split in enumerate(["train", "val", "test"]):
-            path = osp.join(
-                self.raw_dir,
-                "train_test_split",
-                f"shuffled_{split}_file_list.json",
+
+            # Get the patient Id from SHUFFLED_SPLITS
+            PATIENT_ID_LIST = [
+                v for k, v in SHUFFLED_SPLITS.items() if k == split
+            ]
+            # Flatten
+            PATIENT_ID_LIST = list(
+                pd.core.common.flatten(PATIENT_ID_LIST)
             )
-            with open(path, "r") as f:
-                filenames = [
-                    osp.sep.join(name.split("/")[1:]) + ".txt"
-                    for name in json.load(f)
-                ]  # Removing first directory.
+
+            filenames = [
+                os.path.join(self.raw_dir, f"{P_ID}{PCA_FILENAME}")
+                for P_ID in PATIENT_ID_LIST
+            ]
+
             data_raw_list, data_list = self._process_filenames(
                 sorted(filenames)
             )

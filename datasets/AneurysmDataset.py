@@ -57,10 +57,15 @@ from sklearn.preprocessing import (
 NUM_OF_PARTS = 5
 # TODO: Add correct shuffled splits
 SHUFFLED_SPLITS = {
-    "train": ["4_BC", "5_BP"],
-    "val": ["2_BC", "9_BP"],
-    "test": ["13_CM", "18_BC"],
+    "train": ["4_BC", "5_BM"],
+    "val": ["2_BC", "7_BP"],
+    "test": ["14_TR", "18_EM"],
 }
+
+OUTPUT_PCA_PATH = (
+    os.getcwd() + "\\Save data\\Processed_data\\Output\\PCA"
+)
+PCA_FILENAME = "_pca.ply"
 
 
 def scale_data(col: pd.Series, scaler) -> pd.Series:
@@ -194,16 +199,15 @@ class Aneurysm(InMemoryDataset):
         "shapenetcore_partanno_segmentation_benchmark_v0_normal.zip"
     )
 
-    category_ids = {
-        "Airplane": "02691156",
-    }
-
-    seg_classes = {"Airplane": [0, 1, 2, 3]}
+    # category_ids = {
+    #     "Airplane": "02691156",
+    # }
+    # seg_classes = {"Airplane": [0, 1, 2, 3]}
 
     def __init__(
         self,
         root,
-        categories=None,
+        # categories=None,
         include_normals=False,
         split="trainval",
         transform=None,
@@ -212,13 +216,13 @@ class Aneurysm(InMemoryDataset):
         is_test=False,
         raw_file_identifiers=None,
     ):
-        if categories is None:
-            categories = list(self.category_ids.keys())
-        if isinstance(categories, str):
-            categories = [categories]
-        assert all(
-            category in self.category_ids for category in categories
-        )
+        # if categories is None:
+        #     categories = list(self.category_ids.keys())
+        # if isinstance(categories, str):
+        #     categories = [categories]
+        # assert all(
+        #     category in self.category_ids for category in categories
+        # )
         self.categories = categories
         self.is_test = is_test
 
@@ -272,17 +276,38 @@ class Aneurysm(InMemoryDataset):
             y_mask[i, labels] = 1
 
         return data, slices, y_mask
+    
+    def get_raw_data(self, idx, **kwargs):
+        data = self.raw_data.__class__()
 
+        if hasattr(self.raw_data, "__num_nodes__"):
+            data.num_nodes = self.raw_data.__num_nodes__[idx]
+
+        for key in self.raw_data.keys:
+            item, slices = self.raw_data[key], self.raw_slices[key]
+            start, end = slices[idx].item(), slices[idx + 1].item()
+            # print(slices[idx], slices[idx + 1])
+            if torch.is_tensor(item):
+                s = list(repeat(slice(None), item.dim()))
+                s[self.raw_data.__cat_dim__(key, item)] = slice(start, end)
+            elif start + 1 == end:
+                s = slices[start]
+            else:
+                s = slice(start, end)
+            data[key] = item[s]
+        return data
+    
+    
     @property
     def raw_file_names(self):
         return [x + "_pca.ply" for x in self.raw_file_identifiers]
 
     @property
     def processed_raw_paths(self):
-        cats = "_".join([cat[:3].lower() for cat in self.categories])
+        # cats = "_".join([cat[:3].lower() for cat in self.categories])
         processed_raw_paths = [
             os.path.join(
-                self.processed_dir, "raw_{}_{}".format(cats, s)
+                self.processed_dir, "raw_{}".format(s)
             )
             for s in ["train", "val", "test", "trainval"]
         ]
@@ -290,9 +315,9 @@ class Aneurysm(InMemoryDataset):
 
     @property
     def processed_file_names(self):
-        cats = "_".join([cat[:3].lower() for cat in self.categories])
+        # cats = "_".join([cat[:3].lower() for cat in self.categories])
         return [
-            os.path.join("{}_{}.pt".format(cats, split))
+            os.path.join("{}.pt".format( split))
             for split in ["train", "val", "test", "trainval"]
         ]
 
@@ -306,52 +331,32 @@ class Aneurysm(InMemoryDataset):
         name = self.url.split("/")[-1].split(".")[0]
         os.rename(osp.join(self.root, name), self.raw_dir)
 
-    # def get_raw_data(self, idx, **kwargs):
-    # data = self.raw_data.__class__()
-
-    # if hasattr(self.raw_data, "__num_nodes__"):
-    #     data.num_nodes = self.raw_data.__num_nodes__[idx]
-
-    # for key in self.raw_data.keys:
-    #     item, slices = self.raw_data[key], self.raw_slices[key]
-    #     start, end = slices[idx].item(), slices[idx + 1].item()
-    #     # print(slices[idx], slices[idx + 1])
-    #     if torch.is_tensor(item):
-    #         s = list(repeat(slice(None), item.dim()))
-    #         s[self.raw_data.__cat_dim__(key, item)] = slice(start, end)
-    #     elif start + 1 == end:
-    #         s = slices[start]
-    #     else:
-    #         s = slice(start, end)
-    #     data[key] = item[s]
-    # return data
-
     def _process_filenames(self, filepaths):
         data_raw_list = []
         data_list = []
-        categories_ids = [
-            self.category_ids[cat] for cat in self.categories
-        ]
-        cat_idx = {
-            categories_ids[i]: i for i in range(len(categories_ids))
-        }
+        # categories_ids = [
+        #     self.category_ids[cat] for cat in self.categories
+        # ]
+        # cat_idx = {
+        #     categories_ids[i]: i for i in range(len(categories_ids))
+        # }
 
         has_pre_transform = self.pre_transform is not None
 
         id_scan = -1
         for filepath in tq(filepaths):
-            cat = filepath.split(osp.sep)[0]
-            if cat not in categories_ids:
-                continue
+            # cat = filepath.split(osp.sep)[0]
+            # if cat not in categories_ids:
+            #     continue
             id_scan += 1
             data = torch.from_numpy(read_mesh_vertices(filepath))
             pos = data[:, :3]
             x = data[:, 3:-1]
             y = data[:, -1].type(torch.long)
-            category = (
-                torch.ones(x.shape[0], dtype=torch.long)
-                * cat_idx[cat]
-            )
+            # category = (
+            #     torch.ones(x.shape[0], dtype=torch.long)
+            #     * cat_idx[cat]
+            # )
             id_scan_tensor = torch.from_numpy(
                 np.asarray([id_scan])
             ).clone()
@@ -359,7 +364,7 @@ class Aneurysm(InMemoryDataset):
                 pos=pos,
                 x=x,
                 y=y,
-                category=category,
+                # category=category,
                 id_scan=id_scan_tensor,
             )
             data = SaveOriginalPosId()(data)
@@ -410,7 +415,7 @@ class Aneurysm(InMemoryDataset):
             )
 
             filenames = [
-                os.path.join(self.raw_dir, f"{P_ID}{PCA_FILENAME}")
+                os.path.join(self.raw_dir, f"{P_ID}_pca.ply")
                 for P_ID in PATIENT_ID_LIST
             ]
 
@@ -438,10 +443,10 @@ class Aneurysm(InMemoryDataset):
             save_bool=len(raw_trainval) > 0,
         )
 
-    def __repr__(self):
-        return "{}({}, categories={})".format(
-            self.__class__.__name__, len(self), self.categories
-        )
+    # def __repr__(self):
+    #     return "{}({}, categories={})".format(
+    #         self.__class__.__name__, len(self), self.categories
+    #     )
 
 
 class AneurysmDataset(BaseDataset):
@@ -466,14 +471,15 @@ class AneurysmDataset(BaseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         try:
-            self._category = dataset_opt.category
+            # self._category = dataset_opt.category
             is_test = dataset_opt.get("is_test", False)
         except KeyError:
-            self._category = None
+            # self._category = None
 
         self.train_dataset = Aneurysm(
             self._data_path,
-            self._category,
+            raw_file_identifiers = dataset_opt.raw_file_identifiers,
+            # self._category,
             include_normals=dataset_opt.normal,
             split="train",
             pre_transform=self.pre_transform,
@@ -483,7 +489,8 @@ class AneurysmDataset(BaseDataset):
 
         self.val_dataset = Aneurysm(
             self._data_path,
-            self._category,
+            raw_file_identifiers = dataset_opt.raw_file_identifiers,
+            # self._category,
             include_normals=dataset_opt.normal,
             split="val",
             pre_transform=self.pre_transform,
@@ -493,7 +500,8 @@ class AneurysmDataset(BaseDataset):
 
         self.test_dataset = Aneurysm(
             self._data_path,
-            self._category,
+            raw_file_identifiers = dataset_opt.raw_file_identifiers,
+            # self._category,
             include_normals=dataset_opt.normal,
             split="test",
             transform=self.test_transform,
@@ -502,17 +510,17 @@ class AneurysmDataset(BaseDataset):
         )
         self._categories = self.train_dataset.categories
 
-    @property  # type: ignore
-    @save_used_properties
-    def class_to_segments(self):
-        classes_to_segment = {}
-        for key in self._categories:
-            classes_to_segment[key] = Aneurysm.seg_classes[key]
-        return classes_to_segment
+    # @property  # type: ignore
+    # @save_used_properties
+    # def class_to_segments(self):
+    #     classes_to_segment = {}
+    #     for key in self._categories:
+    #         classes_to_segment[key] = Aneurysm.seg_classes[key]
+    #     return classes_to_segment
 
-    @property
-    def is_hierarchical(self):
-        return len(self._categories) > 1
+    # @property
+    # def is_hierarchical(self):
+    #     return len(self._categories) > 1
 
     def get_tracker(self, wandb_log: bool, tensorboard_log: bool):
         """Factory method for the tracker

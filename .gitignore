@@ -5,10 +5,12 @@ __pycache__/
 
 # C extensions
 *.so
+*.ply
 
 # Custom
 /datasets/notebooks/*checkpoints
 /datasets/notebooks/*.html
+/datasets/data/
 .ipynb_checkpoints
 _build
 

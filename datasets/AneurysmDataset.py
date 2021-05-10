@@ -36,11 +36,11 @@ from sklearn.preprocessing import (
 NUM_OF_PARTS = 5
 
 # TODO: Add correct shuffled splits
-SHUFFLED_SPLITS = {
-    "train": ["4_BC", "5_BM"],
-    "val": ["2_BC", "7_BP"],
-    "test": ["14_TR", "18_EM"],
-}
+# shuffled_splits = {
+#     "train": ["4_BC", "5_BM"],
+#     "val": ["2_BC", "7_BP"],
+#     "test": ["14_TR", "18_EM"],
+# }
 
 PCA_FILENAME = "_pca.ply"
 
@@ -126,6 +126,7 @@ def read_mesh_vertices(filepath):
             bins=np.linspace(0, 1, NUM_OF_PARTS + 1),
             labels=np.arange(0, NUM_OF_PARTS),
         )
+        # print(df.WSS.value_counts())
 
         vertices = np.empty((0, df.shape[1]), dtype=np.float32)
         # Stack all the vertices
@@ -175,11 +176,12 @@ class Aneurysm(InMemoryDataset):
         pre_transform=None,
         pre_filter=None,
         is_test=False,
+        shuffled_splits=None
         # raw_file_identifiers=None,
     ):
 
         self.is_test = is_test
-
+        self.shuffled_splits = shuffled_splits
         super(Aneurysm, self).__init__(
             root, transform, pre_transform, pre_filter
         )
@@ -281,6 +283,9 @@ class Aneurysm(InMemoryDataset):
             # Re-assign negative classes (floating point error) to zero
             y = torch.where(y < 0, 0, y)
 
+            # from collections import Counter
+            # print(f"data: {Counter(y.cpu().detach().numpy())}")
+
             id_scan_tensor = torch.from_numpy(
                 np.asarray([id_scan])
             ).clone()
@@ -299,6 +304,13 @@ class Aneurysm(InMemoryDataset):
             if has_pre_transform:
                 data = self.pre_transform(data)
                 data_list.append(data)
+            #     print(
+            #         f"data_list:{Counter(data_list[0].y.cpu().detach().numpy())}"
+            #     )
+            # print(
+            #     f"data_raw_list:{Counter(data_raw_list[0].y.cpu().detach().numpy())}"
+            # )
+
         if not has_pre_transform:
             return [], data_raw_list
         return data_raw_list, data_list
@@ -326,9 +338,11 @@ class Aneurysm(InMemoryDataset):
         trainval = []
         for i, split in enumerate(["train", "val", "test"]):
 
-            # Get the patient Id from SHUFFLED_SPLITS
+            # Get the patient Id from shuffled_splits
             PATIENT_ID_LIST = [
-                v for k, v in SHUFFLED_SPLITS.items() if k == split
+                v
+                for k, v in self.shuffled_splits.items()
+                if k == split
             ]
             # Flatten
             PATIENT_ID_LIST = list(
@@ -343,6 +357,9 @@ class Aneurysm(InMemoryDataset):
             data_raw_list, data_list = self._process_filenames(
                 sorted(filenames)
             )
+            # import ipdb
+
+            # ipdb.set_trace()
             if split == "train" or split == "val":
                 if len(data_raw_list) > 0:
                     raw_trainval.append(data_raw_list)
@@ -387,12 +404,14 @@ class AneurysmDataset(BaseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         is_test = dataset_opt.get("is_test", False)
+        shuffled_splits = dataset_opt.get("shuffled_splits", False)
 
         self.train_dataset = Aneurysm(
             self._data_path,
             # raw_file_identifiers=dataset_opt.raw_file_identifiers,
             # self._category,
             # include_normals=dataset_opt.normal,
+            shuffled_splits=shuffled_splits,
             split="train",
             pre_transform=self.pre_transform,
             transform=self.train_transform,
@@ -404,6 +423,7 @@ class AneurysmDataset(BaseDataset):
             # raw_file_identifiers=dataset_opt.raw_file_identifiers,
             # self._category,
             # include_normals=dataset_opt.normal,
+            shuffled_splits=shuffled_splits,
             split="val",
             pre_transform=self.pre_transform,
             transform=self.val_transform,
@@ -415,6 +435,7 @@ class AneurysmDataset(BaseDataset):
             # raw_file_identifiers=dataset_opt.raw_file_identifiers,
             # self._category,
             # include_normals=dataset_opt.normal,
+            shuffled_splits=shuffled_splits,
             split="test",
             transform=self.test_transform,
             pre_transform=self.pre_transform,

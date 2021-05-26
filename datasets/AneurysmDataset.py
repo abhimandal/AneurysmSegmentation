@@ -33,17 +33,6 @@ from sklearn.preprocessing import (
 #                                                                                      #
 ########################################################################################
 
-NUM_OF_PARTS = 5
-
-# TODO: Add correct shuffled splits
-# shuffled_splits = {
-#     "train": ["4_BC", "5_BM"],
-#     "val": ["2_BC", "7_BP"],
-#     "test": ["14_TR", "18_EM"],
-# }
-
-PCA_FILENAME = "_pca.ply"
-
 
 def scale_data(col: pd.Series, scaler) -> pd.Series:
     """
@@ -55,51 +44,90 @@ def scale_data(col: pd.Series, scaler) -> pd.Series:
     return scaled_column
 
 
-def convert_mesh_to_dataframe(meshply):
+def convert_mesh_to_dataframe(meshply, feat_dict):
     """
-    Convert mesh values into a dataframe and add feature_names
+    Convert mesh values into a dataframe and add feature_names according 
+    to the dictionary passed and scale them between 0 and 1.
+    
+    Args:
+        meshply (meshply obj): Mesh obj that should be converted to a 
+            dataframe
+        features_dict (dictionary,optional): Custom features to be 
+            used to make Dataset. Values should be True or False or 
+            1 or 0 for each key.
+            Accepted keys - "mean_curvature", "gauss_curvature", "fpfh",
+                "shot", "rf", "ones"
     """
 
     df = pd.DataFrame()
+
+    # Scaler for the dataframe
+    min_max_scaler = MinMaxScaler()
+
     df["x"] = pd.Series(meshply.elements[0].data["x"])
     df["y"] = pd.Series(meshply.elements[0].data["y"])
     df["z"] = pd.Series(meshply.elements[0].data["z"])
 
-    df["mean_curv"] = pd.Series(meshply.elements[0].data["mean_curv"])
-    df["gauss_curv"] = pd.Series(
-        meshply.elements[0].data["gauss_curv"]
-    )
+    ###### FEATURE: MEAN CURVATURE ######
+    if [v for k, v in feat_dict.items() if k == "mean_curvature"][0]:
+        df["mean_curv"] = pd.Series(
+            meshply.elements[0].data["mean_curv"]
+        )
+        # Scaler for the feature
+        df["mean_curv"] = scale_data(df["mean_curv"], min_max_scaler)
 
-    df[["fpfh_1", "fpfh_2"]] = pd.DataFrame(
-        meshply.elements[0].data["fpfh"].tolist()
-    )
-    df[["shot_1", "shot_2", "shot_3"]] = pd.DataFrame(
-        meshply.elements[0].data["shot"].tolist()
-    )
-    df[["rf_1", "rf_2", "rf_3"]] = pd.DataFrame(
-        meshply.elements[0].data["rf"].tolist()
-    )
-    # WSS - Feature for Prediction
+    ###### FEATURE: GAUSSIAN CURVATURE ######
+    if [v for k, v in feat_dict.items() if k == "gauss_curvature"][0]:
+        df["gauss_curv"] = pd.Series(
+            meshply.elements[0].data["gauss_curv"]
+        )
+        # Scaler for the feature
+        df["gauss_curv"] = scale_data(
+            df["gauss_curv"], min_max_scaler
+        )
+
+    ###### FEATURE: FPFH DESCRIPTOR ######
+    if [v for k, v in feat_dict.items() if k == "fpfh"][0]:
+        df[["fpfh_1", "fpfh_2"]] = pd.DataFrame(
+            meshply.elements[0].data["fpfh"].tolist()
+        )
+        # Scaler for the feature
+        df["fpfh_1"] = scale_data(df["fpfh_1"], min_max_scaler)
+        df["fpfh_2"] = scale_data(df["fpfh_2"], min_max_scaler)
+
+    ###### FEATURE: SHOT DESCRIPTOR ######
+    if [v for k, v in feat_dict.items() if k == "shot"][0]:
+        df[["shot_1", "shot_2", "shot_3"]] = pd.DataFrame(
+            meshply.elements[0].data["shot"].tolist()
+        )
+        # Scaler for the feature
+        df["shot_1"] = scale_data(df["shot_1"], min_max_scaler)
+        df["shot_2"] = scale_data(df["shot_2"], min_max_scaler)
+        df["shot_3"] = scale_data(df["shot_3"], min_max_scaler)
+
+    ###### FEATURE: SHOT_RF DESCRIPTOR ######
+    if [v for k, v in feat_dict.items() if k == "rf"][0]:
+        df[["rf_1", "rf_2", "rf_3"]] = pd.DataFrame(
+            meshply.elements[0].data["rf"].tolist()
+        )
+        # Scaler for the feature
+        df["rf_1"] = scale_data(df["rf_1"], min_max_scaler)
+        df["rf_2"] = scale_data(df["rf_2"], min_max_scaler)
+        df["rf_3"] = scale_data(df["rf_3"], min_max_scaler)
+
+    ###### FEATURE: ADD ONES ######
+    if [v for k, v in feat_dict.items() if k == "ones"][0]:
+        df["ones"] = int(1)
+
+    ###### LABEL: WSS - FOR PREDICTION ######
     df["WSS"] = pd.Series(meshply.elements[0].data["WSS"])
-
-    # Process the dataframe
-    min_max_scaler = MinMaxScaler()
-    df["mean_curv"] = scale_data(df["mean_curv"], min_max_scaler)
-    df["gauss_curv"] = scale_data(df["gauss_curv"], min_max_scaler)
-    df["fpfh_1"] = scale_data(df["fpfh_1"], min_max_scaler)
-    df["fpfh_2"] = scale_data(df["fpfh_2"], min_max_scaler)
-    df["shot_1"] = scale_data(df["shot_1"], min_max_scaler)
-    df["shot_2"] = scale_data(df["shot_2"], min_max_scaler)
-    df["shot_3"] = scale_data(df["shot_3"], min_max_scaler)
-    df["rf_1"] = scale_data(df["rf_1"], min_max_scaler)
-    df["rf_2"] = scale_data(df["rf_2"], min_max_scaler)
-    df["rf_3"] = scale_data(df["rf_3"], min_max_scaler)
+    # Scaler for the feature
     df["WSS"] = scale_data(df["WSS"], min_max_scaler)
 
     return df
 
 
-def read_mesh_vertices(filepath):
+def read_mesh_vertices(filepath, custom_features_dict):
     """read XYZ and features for each vertex in numpy ndarray
     
     Example - 
@@ -118,7 +146,9 @@ def read_mesh_vertices(filepath):
     with open(filepath, "rb") as f:
         meshplydata = PlyData.read(f)
         num_verts = meshplydata["vertex"].count
-        df = convert_mesh_to_dataframe(meshplydata)
+        df = convert_mesh_to_dataframe(
+            meshplydata, custom_features_dict
+        )
 
         # Categorize the WSS to different parts for part-segmentation
         df["WSS"] = pd.cut(
@@ -169,19 +199,19 @@ class Aneurysm(InMemoryDataset):
     def __init__(
         self,
         root,
-        # categories=None,
-        # include_normals=False,
         split="trainval",
         transform=None,
         pre_transform=None,
         pre_filter=None,
         is_test=False,
         raw_file_identifiers=None,
+        custom_features_dict={"shot": True},
         shuffled_splits=None,
     ):
         self.is_test = is_test
         self.shuffled_splits = shuffled_splits
         self.raw_file_identifiers = raw_file_identifiers
+        self.custom_features_dict = custom_features_dict
         super(Aneurysm, self).__init__(
             root, transform, pre_transform, pre_filter
         )
@@ -253,7 +283,11 @@ class Aneurysm(InMemoryDataset):
         id_scan = -1
         for filepath in tq(filepaths):
             id_scan += 1
-            data = torch.from_numpy(read_mesh_vertices(filepath))
+            data = torch.from_numpy(
+                read_mesh_vertices(
+                    filepath, self.custom_features_dict
+                )
+            )
             pos = data[:, :3]
             x = data[:, 3:-1]
             y = data[:, -1].type(torch.long)
@@ -373,12 +407,13 @@ class AneurysmDataset(BaseDataset):
         Config dictionary that should contain
 
             - dataroot
-            - category: List of categories or All
-            - normal: bool, include normals or not
             - pre_transforms
             - train_transforms
             - test_transforms
             - val_transforms
+            - shuffled_splits : dict for train, test, val, trainval
+            - raw_file_identifiers : List of Patient IDs for Filenames
+            - custom_features_dict : dict for including features
     """
 
     FORWARD_CLASS = "forward.shapenet.ForwardShapenetDataset"
@@ -390,14 +425,16 @@ class AneurysmDataset(BaseDataset):
         raw_file_identifiers = dataset_opt.get(
             "raw_file_identifiers", False
         )
+        custom_features_dict = dataset_opt.get(
+            "features_to_include", False
+        )
         # self.cat_to_seg = dataset_opt.get("category_to_seg", False)
         self.cat_to_seg = cat_to_seg
 
         self.train_dataset = Aneurysm(
             self._data_path,
             raw_file_identifiers=raw_file_identifiers,
-            # self._category,
-            # include_normals=dataset_opt.normal,
+            custom_features_dict=custom_features_dict,
             shuffled_splits=shuffled_splits,
             split="train",
             pre_transform=self.pre_transform,
@@ -408,8 +445,7 @@ class AneurysmDataset(BaseDataset):
         self.val_dataset = Aneurysm(
             self._data_path,
             raw_file_identifiers=raw_file_identifiers,
-            # self._category,
-            # include_normals=dataset_opt.normal,
+            custom_features_dict=custom_features_dict,
             shuffled_splits=shuffled_splits,
             split="val",
             pre_transform=self.pre_transform,
@@ -420,8 +456,7 @@ class AneurysmDataset(BaseDataset):
         self.test_dataset = Aneurysm(
             self._data_path,
             raw_file_identifiers=raw_file_identifiers,
-            # self._category,
-            # include_normals=dataset_opt.normal,
+            custom_features_dict=custom_features_dict,
             shuffled_splits=shuffled_splits,
             split="test",
             transform=self.test_transform,

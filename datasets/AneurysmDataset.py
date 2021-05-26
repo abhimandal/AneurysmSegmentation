@@ -286,10 +286,17 @@ class Aneurysm(InMemoryDataset):
             # from collections import Counter
             # print(f"data: {Counter(y.cpu().detach().numpy())}")
 
+            category = torch.ones(x.shape[0], dtype=torch.long) * 0
             id_scan_tensor = torch.from_numpy(
                 np.asarray([id_scan])
             ).clone()
-            data = Data(pos=pos, x=x, y=y, id_scan=id_scan_tensor,)
+            data = Data(
+                pos=pos,
+                x=x,
+                y=y,
+                category=category,
+                id_scan=id_scan_tensor,
+            )
 
             data = SaveOriginalPosId()(data)
 
@@ -401,10 +408,12 @@ class AneurysmDataset(BaseDataset):
 
     FORWARD_CLASS = "forward.shapenet.ForwardShapenetDataset"
 
-    def __init__(self, dataset_opt):
+    def __init__(self, dataset_opt, cat_to_seg):
         super().__init__(dataset_opt)
         is_test = dataset_opt.get("is_test", False)
         shuffled_splits = dataset_opt.get("shuffled_splits", False)
+        # self.cat_to_seg = dataset_opt.get("category_to_seg", False)
+        self.cat_to_seg = cat_to_seg
 
         self.train_dataset = Aneurysm(
             self._data_path,
@@ -442,6 +451,17 @@ class AneurysmDataset(BaseDataset):
             is_test=is_test,
         )
         # self._categories = self.train_dataset.categories
+
+    @property  # type: ignore
+    @save_used_properties
+    def class_to_segments(self):
+        classes_to_segment = {}
+        classes_to_segment = self.cat_to_seg
+        return classes_to_segment
+
+    # @property
+    # def is_hierarchical(self):
+    #     return len(self._categories) > 1
 
     def get_tracker(self, wandb_log: bool, tensorboard_log: bool):
         """Factory method for the tracker

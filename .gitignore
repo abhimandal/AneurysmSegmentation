@@ -14,7 +14,7 @@ __pycache__/
 .ipynb_checkpoints
 _build
 
-/tensorboard/
+**/tensorboard/
 /data/
 *.pyc
 __pycache__

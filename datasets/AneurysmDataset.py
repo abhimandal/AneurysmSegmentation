@@ -170,22 +170,21 @@ class Aneurysm(InMemoryDataset):
         self,
         root,
         # categories=None,
-        include_normals=False,
+        # include_normals=False,
         split="trainval",
         transform=None,
         pre_transform=None,
         pre_filter=None,
         is_test=False,
-        shuffled_splits=None
-        # raw_file_identifiers=None,
+        raw_file_identifiers=None,
+        shuffled_splits=None,
     ):
-
         self.is_test = is_test
         self.shuffled_splits = shuffled_splits
+        self.raw_file_identifiers = raw_file_identifiers
         super(Aneurysm, self).__init__(
             root, transform, pre_transform, pre_filter
         )
-        # self.raw_file_identifiers = RAW_FILE_NAMES
 
         if split == "train":
             path = self.processed_paths[0]
@@ -225,29 +224,7 @@ class Aneurysm(InMemoryDataset):
 
     @property
     def raw_file_names(self):
-        RAW_NAMES = [
-            "2_BC_pca.ply",
-            "3_BC_pca.ply",
-            "4_BC_pca.ply",
-            "5_BM_pca.ply",
-            "6_BM_pca.ply",
-            "7_BP_pca.ply",
-            "8_BP_pca.ply",
-            "9_KBW_pca.ply",
-            "10_SUM_pca.ply",
-            "11_DHM_pca.ply",
-            "12_GAW_pca.ply",
-            "13_PMM_pca.ply",
-            "14_TR_pca.ply",
-            "15_TR_pca.ply",
-            "16_TR_pca.ply",
-            "18_EM_pca.ply",
-            "19_EM_pca.ply",
-            "20_EM_pca.ply",
-        ]
-
-        return RAW_NAMES
-        # return [x + "_pca.ply" for x in self.raw_file_identifiers]
+        return [x + "_pca.ply" for x in self.raw_file_identifiers]
 
     @property
     def processed_raw_paths(self):
@@ -364,9 +341,7 @@ class Aneurysm(InMemoryDataset):
             data_raw_list, data_list = self._process_filenames(
                 sorted(filenames)
             )
-            # import ipdb
 
-            # ipdb.set_trace()
             if split == "train" or split == "val":
                 if len(data_raw_list) > 0:
                     raw_trainval.append(data_raw_list)
@@ -412,12 +387,15 @@ class AneurysmDataset(BaseDataset):
         super().__init__(dataset_opt)
         is_test = dataset_opt.get("is_test", False)
         shuffled_splits = dataset_opt.get("shuffled_splits", False)
+        raw_file_identifiers = dataset_opt.get(
+            "raw_file_identifiers", False
+        )
         # self.cat_to_seg = dataset_opt.get("category_to_seg", False)
         self.cat_to_seg = cat_to_seg
 
         self.train_dataset = Aneurysm(
             self._data_path,
-            # raw_file_identifiers=dataset_opt.raw_file_identifiers,
+            raw_file_identifiers=raw_file_identifiers,
             # self._category,
             # include_normals=dataset_opt.normal,
             shuffled_splits=shuffled_splits,
@@ -429,7 +407,7 @@ class AneurysmDataset(BaseDataset):
 
         self.val_dataset = Aneurysm(
             self._data_path,
-            # raw_file_identifiers=dataset_opt.raw_file_identifiers,
+            raw_file_identifiers=raw_file_identifiers,
             # self._category,
             # include_normals=dataset_opt.normal,
             shuffled_splits=shuffled_splits,
@@ -441,7 +419,7 @@ class AneurysmDataset(BaseDataset):
 
         self.test_dataset = Aneurysm(
             self._data_path,
-            # raw_file_identifiers=dataset_opt.raw_file_identifiers,
+            raw_file_identifiers=raw_file_identifiers,
             # self._category,
             # include_normals=dataset_opt.normal,
             shuffled_splits=shuffled_splits,

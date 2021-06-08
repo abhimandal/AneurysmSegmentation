@@ -19,32 +19,46 @@ from aneurysm_segmentation3d.scripts.modelling.model import (
 )
 from aneurysm_segmentation3d.scripts.modelling.trainer import Trainer
 
-CONF_DIR = "D:\\Workspace\\Python\AneurysmSegmentation\\aneurysm_segmentation3d\\scripts\\data\conf\\conf_base.yaml"
+
+BASE_DIR = "D:\\Workspace\\Python\AneurysmSegmentation\\aneurysm_segmentation3d"
+NUM_WORKERS = 2
+BATCH_SIZE = 3
 PARTS_TO_SEGMENT = 5
 
-# category_to_seg = {'aneur': np.arange(PARTS_TO_SEGMENT)}
-category_to_seg = {"aneur": [0, 1, 2, 3, 4]}
+CONF_DIR = os.path.join(
+    BASE_DIR, "scripts\\data\conf\\conf_base.yaml"
+)
 
 # Load Config file
 params = OmegaConf.load(CONF_DIR)
+params.dataroot = os.path.join(BASE_DIR, "datasets\\data")
 
-params.dataroot = (
-    "D:\\Workspace\\Python\\aneurysm-segmentation\\datasets\\data"
-)
+# create category counts
+category_to_seg = {"aneur": np.arange(PARTS_TO_SEGMENT)}
+
+# Create Dataset
 dataset = AneurysmDataset.AneurysmDataset(params, category_to_seg)
 
-model = PartSegKPConv(dataset.class_to_segments)
-
-NUM_WORKERS = 0
-BATCH_SIZE = 3
-dataset.create_dataloaders(
-    model,
-    batch_size=BATCH_SIZE,
-    num_workers=NUM_WORKERS,
-    shuffle=True,
-    precompute_multi_scale=True,
+# Create the Model
+model = PartSegKPConv(
+    dataset.class_to_segments,
+    input_nc=dataset.train_dataset[1].x.shape[1] - 1,
 )
 
-# sample = next(iter(dataset.train_dataloader))
-trainer = Trainer(model, dataset)
-trainer.fit()
+
+if __name__ == "__main__":
+
+    # Create dataloaders
+    dataset.create_dataloaders(
+        model,
+        batch_size=BATCH_SIZE,
+        num_workers=NUM_WORKERS,
+        shuffle=True,
+        precompute_multi_scale=True,
+    )
+    # sample = next(iter(dataset.train_dataloader))
+
+    trainer = Trainer(
+        model, dataset, num_epoch=1, device=torch.device("cpu")
+    )
+    trainer.fit()

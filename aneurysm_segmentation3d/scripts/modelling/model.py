@@ -13,11 +13,11 @@ from torch_points3d.core.common_modules.base_modules import (
 
 
 class PartSegKPConv(torch.nn.Module):
-    def __init__(self, cat_to_seg):
+    def __init__(self, cat_to_seg, input_nc):
         super().__init__()
         self.unet = KPConv(
             architecture="unet",
-            input_nc=4,
+            input_nc=input_nc,
             num_layers=4,
             in_grid_size=0.02,
         )

@@ -127,7 +127,9 @@ def convert_mesh_to_dataframe(meshply, feat_dict):
     return df
 
 
-def read_mesh_vertices(filepath, custom_features_dict):
+def read_mesh_vertices(
+    filepath, custom_features_dict, num_parts_to_segment
+):
     """read XYZ and features for each vertex in numpy ndarray
     
     Example - 
@@ -141,7 +143,6 @@ def read_mesh_vertices(filepath, custom_features_dict):
     
     """
     assert os.path.isfile(filepath)
-    NUM_OF_PARTS = 5
 
     with open(filepath, "rb") as f:
         meshplydata = PlyData.read(f)
@@ -153,10 +154,9 @@ def read_mesh_vertices(filepath, custom_features_dict):
         # Categorize the WSS to different parts for part-segmentation
         df["WSS"] = pd.cut(
             df["WSS"],
-            bins=np.linspace(0, 1, NUM_OF_PARTS + 1),
-            labels=np.arange(0, NUM_OF_PARTS),
+            bins=np.linspace(0, 1, num_parts_to_segment + 1),
+            labels=np.arange(0, num_parts_to_segment),
         )
-        # print(df.WSS.value_counts())
 
         vertices = np.empty((0, df.shape[1]), dtype=np.float32)
         # Stack all the vertices
@@ -206,12 +206,14 @@ class Aneurysm(InMemoryDataset):
         is_test=False,
         raw_file_identifiers=None,
         custom_features_dict={"shot": True},
+        num_parts_to_segment=5,
         shuffled_splits=None,
     ):
         self.is_test = is_test
         self.shuffled_splits = shuffled_splits
         self.raw_file_identifiers = raw_file_identifiers
         self.custom_features_dict = custom_features_dict
+        self.num_parts_to_segment = num_parts_to_segment
         super(Aneurysm, self).__init__(
             root, transform, pre_transform, pre_filter
         )
@@ -285,7 +287,9 @@ class Aneurysm(InMemoryDataset):
             id_scan += 1
             data = torch.from_numpy(
                 read_mesh_vertices(
-                    filepath, self.custom_features_dict
+                    filepath,
+                    self.custom_features_dict,
+                    self.num_parts_to_segment,
                 )
             )
             pos = data[:, :3]
@@ -428,6 +432,9 @@ class AneurysmDataset(BaseDataset):
         custom_features_dict = dataset_opt.get(
             "features_to_include", False
         )
+        num_parts_to_segment = dataset_opt.get(
+            "parts_to_segment", False
+        )
         # self.cat_to_seg = dataset_opt.get("category_to_seg", False)
         self.cat_to_seg = cat_to_seg
 
@@ -435,6 +442,7 @@ class AneurysmDataset(BaseDataset):
             self._data_path,
             raw_file_identifiers=raw_file_identifiers,
             custom_features_dict=custom_features_dict,
+            num_parts_to_segment=num_parts_to_segment,
             shuffled_splits=shuffled_splits,
             split="train",
             pre_transform=self.pre_transform,
@@ -446,6 +454,7 @@ class AneurysmDataset(BaseDataset):
             self._data_path,
             raw_file_identifiers=raw_file_identifiers,
             custom_features_dict=custom_features_dict,
+            num_parts_to_segment=num_parts_to_segment,
             shuffled_splits=shuffled_splits,
             split="val",
             pre_transform=self.pre_transform,
@@ -457,6 +466,7 @@ class AneurysmDataset(BaseDataset):
             self._data_path,
             raw_file_identifiers=raw_file_identifiers,
             custom_features_dict=custom_features_dict,
+            num_parts_to_segment=num_parts_to_segment,
             shuffled_splits=shuffled_splits,
             split="test",
             transform=self.test_transform,

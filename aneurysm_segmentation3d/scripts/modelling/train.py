@@ -32,6 +32,7 @@ CONF_DIR = os.path.join(
 # Load Config file
 params = OmegaConf.load(CONF_DIR)
 params.dataroot = os.path.join(BASE_DIR, "datasets\\data")
+params.parts_to_segment = PARTS_TO_SEGMENT
 
 # create category counts
 category_to_seg = {"aneur": np.arange(PARTS_TO_SEGMENT)}

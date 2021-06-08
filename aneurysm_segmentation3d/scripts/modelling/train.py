@@ -1,4 +1,5 @@
 import os, sys
+import glob
 import torch
 import pyvista as pv
 import pandas as pd
@@ -21,24 +22,59 @@ from aneurysm_segmentation3d.scripts.modelling.trainer import Trainer
 
 
 BASE_DIR = "D:\\Workspace\\Python\AneurysmSegmentation\\aneurysm_segmentation3d"
-NUM_WORKERS = 2
-BATCH_SIZE = 3
-PARTS_TO_SEGMENT = 5
-
 CONF_DIR = os.path.join(
     BASE_DIR, "scripts\\data\conf\\conf_base.yaml"
 )
+DATAROOT = os.path.join(BASE_DIR, "datasets\\data")
+PROCESSED_DIR = os.listdir(
+    os.path.join(DATAROOT, "aneurysm\\processed")
+)
+
+
+NUM_WORKERS = 2
+BATCH_SIZE = 3
+PARTS_TO_SEGMENT = 5
+DELETE_OLD_FILES = False
 
 # Load Config file
 params = OmegaConf.load(CONF_DIR)
-params.dataroot = os.path.join(BASE_DIR, "datasets\\data")
+params.dataroot = DATAROOT
 params.parts_to_segment = PARTS_TO_SEGMENT
 
 # create category counts
 category_to_seg = {"aneur": np.arange(PARTS_TO_SEGMENT)}
 
+# Delete older files
+files = glob.glob(DATAROOT)
+if DELETE_OLD_FILES:
+    for f in files:
+        os.remove(f)
+    print("Finished deleting older processed files")
+
+
 # Create Dataset
-dataset = AneurysmDataset.AneurysmDataset(params, category_to_seg)
+
+# NOTE: Since creating new processed file, throws error, exit and run again.
+# If the files are already exit for a given config inside the "processed" dir,
+# then the files are loaded.
+
+if (len(PROCESSED_DIR)) == 0:
+    # Create Dataset
+    dataset = AneurysmDataset.AneurysmDataset(params, category_to_seg)
+
+    print(
+        "\n",
+        "*" * 20,
+        "Finished creating fresh processed dataset files.",
+        "Exiting. Please run the script again",
+        "*" * 20,
+    )
+
+    # to avoid multiprocessing error, run exit and run the script again
+    sys.exit()
+else:
+    # Create Dataset
+    dataset = AneurysmDataset.AneurysmDataset(params, category_to_seg)
 
 # Create the Model
 model = PartSegKPConv(

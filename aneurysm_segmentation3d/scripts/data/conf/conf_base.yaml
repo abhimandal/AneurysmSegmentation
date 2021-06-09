@@ -1,0 +1,29 @@
+task: segmentation 
+class: AneurysmDataset.AneurysmDataset
+first_subsampling: 0.02                       # Grid size of the input data
+pre_transforms:                               # Offline transforms, done only once
+    - transform: NormalizeScale           
+    - transform: GridSampling3D
+      params:
+        size: ${first_subsampling}
+train_transforms:                             # Data augmentation pipeline
+    - transform: RandomNoise
+      params:
+        sigma: 0.01
+        clip: 0.05
+    - transform: RandomScaleAnisotropic
+      params:
+        scales: [0.9,1.1]
+raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '5_BM', '6_BM', '7_BP', '8_BP', 
+  '9_KBW', '10_SUM', '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM', 
+  '19_EM', '20_EM', '21_FA', '22_FA', '23_HJ', '24_HJ', '25_HM', '26_HM', '27_HM', 
+  '28_JM', '29_JM', '30_JM', '31_JM', '32_JM', '33_KBB', '34_KBB', '35_KBB', '36_KBB', 
+  '37_KBB', '38_KBB', '39_KBB', '40_KBB', '41_KBB', '42_KBB', '43_KBB', '44_AC', '45_AC', 
+  '46_LE', '47_LE', '48_LE', '50_LE', '51_LE', '52_LE', '54_MR', '55_MR', '56_WA', '57_SF', 
+  '58_SI', '59_SI']
+shuffled_splits:
+  {train: ['2_BC', '3_BC', '4_BC', '5_BM', '6_BM', '7_BP', '9_KBW', '8_BP', '10_SUM', '11_DHM'], 
+  val: ['12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM'],
+  test: ['23_HJ', '24_HJ', '25_HM']
+  }
+features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":0,"shot":1, "rf":0, "ones":0}

@@ -60,7 +60,7 @@ if DELETE_OLD_FILES:
 
 if (len(PROCESSED_DIR)) == 0:
     # Create Dataset
-    dataset = AneurysmDataset.AneurysmDataset(params, category_to_seg)
+    dataset = AneurysmDataset.AneurysmDataset(params)
 
     print(
         "\n",
@@ -74,7 +74,7 @@ if (len(PROCESSED_DIR)) == 0:
     sys.exit()
 else:
     # Create Dataset
-    dataset = AneurysmDataset.AneurysmDataset(params, category_to_seg)
+    dataset = AneurysmDataset.AneurysmDataset(params)
 
 # Create the Model
 model = PartSegKPConv(

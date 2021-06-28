@@ -422,7 +422,7 @@ class AneurysmDataset(BaseDataset):
 
     FORWARD_CLASS = "forward.shapenet.ForwardShapenetDataset"
 
-    def __init__(self, dataset_opt, cat_to_seg):
+    def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
         is_test = dataset_opt.get("is_test", False)
         shuffled_splits = dataset_opt.get("shuffled_splits", False)
@@ -436,7 +436,8 @@ class AneurysmDataset(BaseDataset):
             "parts_to_segment", False
         )
         # self.cat_to_seg = dataset_opt.get("category_to_seg", False)
-        self.cat_to_seg = cat_to_seg
+        # self.cat_to_seg = cat_to_seg
+        self.cat_to_seg = {"aneur": np.arange(num_parts_to_segment)}
 
         self.train_dataset = Aneurysm(
             self._data_path,
@@ -479,7 +480,7 @@ class AneurysmDataset(BaseDataset):
     @save_used_properties
     def class_to_segments(self):
         classes_to_segment = {}
-        classes_to_segment = self.cat_to_seg
+        classes_to_segment["aneur"] = self.cat_to_seg["aneur"]
         return classes_to_segment
 
     # @property

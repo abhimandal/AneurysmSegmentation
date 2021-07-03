@@ -120,23 +120,17 @@ class Trainer:
             self._dataset: BaseDataset = instantiate_dataset(
                 self._cfg
             )
-            # self._model = self._model
+            self._dataset.class_to_segments["aneur"] = np.arange(
+                0, self.parts_to_segment
+            ).tolist()
+
             self._model: BaseModel = instantiate_model(
                 copy.deepcopy(self._cfg), self._dataset
             )
 
             self._model.instantiate_optimizers(self._cfg)
             self._model.set_pretrained_weights()
-            self._dataset.used_properties[
-                "class_to_segments"
-            ] = np.arange(0, self.parts_to_segment).tolist()
-            # self._dataset.used_properties["class_to_segments"] = [
-            #     0,
-            #     1,
-            #     2,
-            #     3,
-            #     4,
-            # ]
+
             if not self._checkpoint.validate(
                 self._dataset.used_properties
             ):

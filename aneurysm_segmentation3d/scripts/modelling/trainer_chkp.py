@@ -67,11 +67,11 @@ class Trainer:
             resume = bool(self._cfg.training.checkpoint_dir)
 
         # Get device
-        # if self._cfg.training.cuda > -1 and torch.cuda.is_available():
-        #     device = "cuda"
-        #     torch.cuda.set_device(self._cfg.training.cuda)
-        # else:
-        device = "cpu"
+        if self._cfg.training.cuda > -1 and torch.cuda.is_available():
+            device = "cuda"
+            torch.cuda.set_device(self._cfg.training.cuda)
+        else:
+            device = "cpu"
         self._device = torch.device(device)
         log.info("DEVICE : {}".format(self._device))
 
@@ -85,19 +85,6 @@ class Trainer:
             Wandb.launch(
                 self._cfg, self._cfg.wandb.public and self.wandb_log
             )
-
-        # # Checkpoint
-        # print(
-        #     "ckp dir:",
-        #     self._cfg.training.checkpoint_dir,
-        #     "\n model name",
-        #     self._cfg.model_name,
-        # )
-
-        # print("\n Config", self._cfg)
-        # import sys
-
-        # sys.exit()
 
         self._checkpoint: ModelCheckpoint = ModelCheckpoint(
             self._cfg.training.checkpoint_dir,
@@ -130,6 +117,11 @@ class Trainer:
 
             self._model.instantiate_optimizers(self._cfg)
             self._model.set_pretrained_weights()
+
+            # Fix key error
+            self._dataset.used_properties[
+                "class_to_segments"
+            ] = np.arange(0, self.parts_to_segment).tolist()
 
             if not self._checkpoint.validate(
                 self._dataset.used_properties
@@ -226,7 +218,6 @@ class Trainer:
                 self._test_epoch(epoch, "test")
 
     def _train_epoch(self, epoch):
-        # self._model.to(self.device)
         self._model.train()
         print("Learning Rate", "=" * 11, self._model.learning_rate)
         self._tracker.reset("train")
@@ -327,27 +318,6 @@ class Trainer:
 
             self._finalize_epoch(epoch)
             self._tracker.print_summary()
-
-    # def _test_epoch(self):
-    #     self._model.to(self.device)
-    #     self._model.eval()
-    #     self.tracker.reset("test")
-    #     test_loader = self._dataset.test_dataloaders[0]
-    #     iter_data_time = time.time()
-    #     with tqdm(test_loader) as tq_test_loader:
-    #         for i, data in enumerate(tq_test_loader):
-    #             t_data = time.time() - iter_data_time
-    #             iter_start_time = time.time()
-    #             data.to(self.device)
-    #             self._model.forward(data)
-    #             self.tracker.track(self._model)
-
-    #             tq_test_loader.set_postfix(
-    #                 **self.tracker.get_metrics(),
-    #                 data_loading=float(t_data),
-    #                 iteration=float(time.time() - iter_start_time),
-    #             )
-    #             iter_data_time = time.time()
 
     def eval(self, stage_name=""):
         self._is_training = False

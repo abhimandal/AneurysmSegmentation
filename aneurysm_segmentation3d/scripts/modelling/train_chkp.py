@@ -32,6 +32,14 @@ PROCESSED_DIR = os.listdir(
     os.path.join(DATAROOT, "aneurysm\\processed")
 )
 
+# BASE_DIR = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d"
+# CONF_DIR = os.path.join(
+#     BASE_DIR, "scripts/data/conf/conf_base.yaml"
+# )
+# DATAROOT = os.path.join(BASE_DIR, "datasets/data")
+# PROCESSED_DIR = os.listdir(
+#     os.path.join(DATAROOT, "aneurysm/processed")
+# )
 
 NUM_WORKERS = 2
 BATCH_SIZE = 3

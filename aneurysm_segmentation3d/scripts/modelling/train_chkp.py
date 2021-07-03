@@ -4,6 +4,8 @@ import torch
 import pyvista as pv
 import pandas as pd
 import numpy as np
+import shutil
+
 
 sys.path.append(os.getcwd())
 
@@ -22,7 +24,7 @@ from aneurysm_segmentation3d.scripts.modelling.trainer_chkp import (
     Trainer,
 )
 
-
+############################# WINDOWS PATHS #############################
 BASE_DIR = "D:\\Workspace\\Python\AneurysmSegmentation\\aneurysm_segmentation3d"
 CONF_DIR = os.path.join(
     BASE_DIR, "scripts\\data\conf\\conf_test.yaml"
@@ -32,6 +34,14 @@ PROCESSED_DIR = os.listdir(
     os.path.join(DATAROOT, "aneurysm\\processed")
 )
 
+# Copy Dataset file - for ModelCheckpoint reconstruction
+SRC_DATA_PY = os.path.join(
+    BASE_DIR, "scripts\\data\\AneurysmDataset.py"
+)
+DST_DATA_PY = "C:\\Users\\abhil\\anaconda3\\envs\\kpconv\\lib\\site-packages\\torch_points3d\\datasets\\segmentation"
+shutil.copy(SRC_DATA_PY, DST_DATA_PY)
+
+############################# LINUX PATHS #############################
 # BASE_DIR = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d"
 # CONF_DIR = os.path.join(
 #     BASE_DIR, "scripts/data/conf/conf_base.yaml"
@@ -40,6 +50,13 @@ PROCESSED_DIR = os.listdir(
 # PROCESSED_DIR = os.listdir(
 #     os.path.join(DATAROOT, "aneurysm/processed")
 # )
+
+# # Copy Dataset file - for ModelCheckpoint reconstruction
+# SRC_DATA_PY = os.path.join(
+#     BASE_DIR, "scripts/data/AneurysmDataset.py"
+# )
+# DST_DATA_PY = "/opt/conda/envs/torchpoint/lib/python3.7/site-packages/torch_points3d/datasets/segmentation"
+# shutil.copy(SRC_DATA_PY, DST_DATA_PY)
 
 NUM_WORKERS = 2
 BATCH_SIZE = 3
@@ -95,16 +112,6 @@ model = PartSegKPConv(
 
 
 if __name__ == "__main__":
-
-    # Create dataloaders
-    # dataset.create_dataloaders(
-    #     model,
-    #     batch_size=BATCH_SIZE,
-    #     num_workers=NUM_WORKERS,
-    #     shuffle=True,
-    #     precompute_multi_scale=True,
-    # )
-    # sample = next(iter(dataset.train_dataloader))
 
     trainer = Trainer(
         params, dataset, PARTS_TO_SEGMENT, device=torch.device("cpu"),

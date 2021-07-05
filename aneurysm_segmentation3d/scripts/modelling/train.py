@@ -124,6 +124,6 @@ if __name__ == "__main__":
     # sample = next(iter(dataset.train_dataloader))
 
     trainer = Trainer(
-        model, dataset, num_epoch=1, device=torch.device("cpu")
+        model, dataset, num_epoch=4, device=torch.device("cuda")
     )
     trainer.fit()

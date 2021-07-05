@@ -48,7 +48,7 @@ else:
     ############################# LINUX PATHS #############################
     BASE_DIR = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d"
     CONF_DIR = os.path.join(
-        BASE_DIR, "scripts/data/conf/conf_base.yaml"
+        BASE_DIR, "scripts/data/conf/conf_test.yaml"
     )
     DATAROOT = os.path.join(BASE_DIR, "datasets/data")
     PROCESSED_DIR = os.listdir(

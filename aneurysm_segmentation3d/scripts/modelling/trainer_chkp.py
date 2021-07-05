@@ -47,7 +47,7 @@ class Trainer:
         cfg,
         # dataset,
         parts_to_segment,
-        device=torch.device("cpu"),
+        # device=torch.device("cpu"),
     ):
         self._cfg = cfg
         # self._model = model
@@ -112,8 +112,9 @@ class Trainer:
                 weight_name=self._cfg.training.weight_name,
             )
         else:
+
             self._dataset: BaseDataset = instantiate_dataset(
-                self._cfg
+                self._cfg.data
             )
             self._dataset.cat_to_seg["aneur"] = np.arange(
                 0, self.parts_to_segment
@@ -173,8 +174,8 @@ class Trainer:
 
         # Choose selection stage
         selection_stage = getattr(self._cfg, "selection_stage", "")
-        self._checkpoint.selection_stage = self._dataset.resolve_saving_stage(
-            selection_stage
+        self._checkpoint.selection_stage = (
+            self._dataset.resolve_saving_stage(selection_stage)
         )
         self._tracker: BaseTracker = self._dataset.get_tracker(
             self.wandb_log, self.tensorboard_log

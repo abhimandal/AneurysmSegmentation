@@ -113,8 +113,6 @@ if __name__ == "__main__":
 
     trainer = Trainer(
         params,
-        # dataset,
         PARTS_TO_SEGMENT,
-        # device=torch.device("cpu"),
     )
     trainer.fit()

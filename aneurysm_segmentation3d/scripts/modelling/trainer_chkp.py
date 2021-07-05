@@ -45,15 +45,10 @@ class Trainer:
     def __init__(
         self,
         cfg,
-        # dataset,
         parts_to_segment,
-        # device=torch.device("cpu"),
     ):
         self._cfg = cfg
-        # self._model = model
-        # self._dataset = dataset
         self.parts_to_segment = parts_to_segment
-        # self.device = device
         self._initialize_trainer()
 
     def _initialize_trainer(self):
@@ -85,6 +80,7 @@ class Trainer:
             Wandb.launch(
                 self._cfg, self._cfg.wandb.public and self.wandb_log
             )
+
         # Fixes
         self._cfg.data.dataroot = self._cfg.dataroot
         self._cfg.data.raw_file_identifiers = (
@@ -122,6 +118,7 @@ class Trainer:
             self._dataset: BaseDataset = instantiate_dataset(
                 self._cfg
             )
+            # Fixes
             self._dataset.cat_to_seg["aneur"] = np.arange(
                 0, self.parts_to_segment
             ).tolist()

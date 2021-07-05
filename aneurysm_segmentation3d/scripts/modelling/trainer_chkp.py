@@ -85,7 +85,13 @@ class Trainer:
             Wandb.launch(
                 self._cfg, self._cfg.wandb.public and self.wandb_log
             )
+        # Fixes
         self._cfg.data.dataroot = self._cfg.dataroot
+        self._cfg.data.raw_file_identifiers = (
+            self._cfg.raw_file_identifiers
+        )
+        self._cfg.data.shuffled_splits = self._cfg.shuffled_splits
+
         self._checkpoint: ModelCheckpoint = ModelCheckpoint(
             self._cfg.training.checkpoint_dir,
             self._cfg.model_name,
@@ -114,7 +120,7 @@ class Trainer:
         else:
 
             self._dataset: BaseDataset = instantiate_dataset(
-                self._cfg.data
+                self._cfg
             )
             self._dataset.cat_to_seg["aneur"] = np.arange(
                 0, self.parts_to_segment

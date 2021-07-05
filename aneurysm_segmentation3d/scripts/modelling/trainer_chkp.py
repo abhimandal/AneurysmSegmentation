@@ -45,13 +45,13 @@ class Trainer:
     def __init__(
         self,
         cfg,
-        dataset,
+        # dataset,
         parts_to_segment,
-        device=torch.device("cpu"),
+        # device=torch.device("cpu"),
     ):
         self._cfg = cfg
         # self._model = model
-        self._dataset = dataset
+        # self._dataset = dataset
         self.parts_to_segment = parts_to_segment
         # self.device = device
         self._initialize_trainer()
@@ -85,7 +85,7 @@ class Trainer:
             Wandb.launch(
                 self._cfg, self._cfg.wandb.public and self.wandb_log
             )
-
+        self._cfg.data.dataroot = self._cfg.dataroot
         self._checkpoint: ModelCheckpoint = ModelCheckpoint(
             self._cfg.training.checkpoint_dir,
             self._cfg.model_name,
@@ -99,14 +99,24 @@ class Trainer:
             self._dataset: BaseDataset = instantiate_dataset(
                 self._checkpoint.data_config
             )
+            self._dataset.cat_to_seg["aneur"] = np.arange(
+                0, self.parts_to_segment
+            ).tolist()
+            self._dataset.class_to_segments["aneur"] = np.arange(
+                0, self.parts_to_segment
+            ).tolist()
             self._model = self._checkpoint.create_model(
                 self._dataset,
                 weight_name=self._cfg.training.weight_name,
             )
         else:
+
             self._dataset: BaseDataset = instantiate_dataset(
-                self._cfg
+                self._cfg.data
             )
+            self._dataset.cat_to_seg["aneur"] = np.arange(
+                0, self.parts_to_segment
+            ).tolist()
             self._dataset.class_to_segments["aneur"] = np.arange(
                 0, self.parts_to_segment
             ).tolist()
@@ -162,8 +172,8 @@ class Trainer:
 
         # Choose selection stage
         selection_stage = getattr(self._cfg, "selection_stage", "")
-        self._checkpoint.selection_stage = self._dataset.resolve_saving_stage(
-            selection_stage
+        self._checkpoint.selection_stage = (
+            self._dataset.resolve_saving_stage(selection_stage)
         )
         self._tracker: BaseTracker = self._dataset.get_tracker(
             self.wandb_log, self.tensorboard_log

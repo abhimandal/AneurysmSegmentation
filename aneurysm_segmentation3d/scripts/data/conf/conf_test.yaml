@@ -2,7 +2,7 @@ task: segmentation
 class: AneurysmDataset.AneurysmDataset
 first_subsampling: 0.02    
 dataset_name: 'aneurysm'
-dataroot: "D:\\Workspace\\Python\\AneurysmSegmentation\\aneurysm_segmentation3d\\datasets\\data"                   # Grid size of the input data
+# dataroot: "D:\\Workspace\\Python\\AneurysmSegmentation\\aneurysm_segmentation3d\\datasets\\data"                   # Grid size of the input data
 pre_transforms:                               # Offline transforms, done only once
     - transform: NormalizeScale           
     - transform: GridSampling3D
@@ -41,7 +41,7 @@ data:
   class: AneurysmDataset.AneurysmDataset
   first_subsampling: 0.02
   # dataset_name: 'aneurysm'
-  # dataroot: "D:\\Workspace\\Python\\AneurysmSegmentation\\aneurysm_segmentation3d\\datasets\\data"
+  # # dataroot: "D:\\Workspace\\Python\\AneurysmSegmentation\\aneurysm_segmentation3d\\datasets\\data"
   # # cat_to_seg: {'aneur':[0,1,2,3,4]}
   # pre_transforms:                               # Offline transforms, done only once
   #   - transform: NormalizeScale           
@@ -195,8 +195,8 @@ training:
   checkpoint_dir: ''
   cuda: -1
   enable_cudnn: false
-  epochs: 1
-  num_workers: 2
+  epochs: 3
+  num_workers: 0
   optim:
     base_lr: 0.001
     bn_scheduler:

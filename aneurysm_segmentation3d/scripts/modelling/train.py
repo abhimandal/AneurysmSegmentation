@@ -8,7 +8,6 @@ import shutil
 import warnings
 
 warnings.filterwarnings("ignore")
-
 sys.path.append(os.getcwd())
 
 from omegaconf import OmegaConf
@@ -59,7 +58,6 @@ else:
     )
     DST_DATA_PY = "/opt/conda/envs/torchpoint/lib/python3.7/site-packages/torch_points3d/datasets/segmentation"
     shutil.copy(SRC_DATA_PY, DST_DATA_PY)
-
 
 NUM_WORKERS = 0
 BATCH_SIZE = 3

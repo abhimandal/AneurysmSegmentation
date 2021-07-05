@@ -99,12 +99,14 @@ class Trainer:
             self._dataset: BaseDataset = instantiate_dataset(
                 self._checkpoint.data_config
             )
+
             self._dataset.cat_to_seg["aneur"] = np.arange(
                 0, self.parts_to_segment
             ).tolist()
             self._dataset.class_to_segments["aneur"] = np.arange(
                 0, self.parts_to_segment
             ).tolist()
+
             self._model = self._checkpoint.create_model(
                 self._dataset,
                 weight_name=self._cfg.training.weight_name,

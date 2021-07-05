@@ -5,7 +5,9 @@ import pyvista as pv
 import pandas as pd
 import numpy as np
 import shutil
+import warnings
 
+warnings.filterwarnings("ignore")
 
 sys.path.append(os.getcwd())
 
@@ -60,7 +62,7 @@ else:
     DST_DATA_PY = "/opt/conda/envs/torchpoint/lib/python3.7/site-packages/torch_points3d/datasets/segmentation"
     shutil.copy(SRC_DATA_PY, DST_DATA_PY)
 
-NUM_WORKERS = 2
+NUM_WORKERS = 0
 BATCH_SIZE = 3
 PARTS_TO_SEGMENT = 5
 DELETE_OLD_FILES = False
@@ -106,16 +108,13 @@ else:
     # Create Dataset
     dataset = AneurysmDataset.AneurysmDataset(params)
 
-# Create the Model
-model = PartSegKPConv(
-    dataset.cat_to_seg,
-    input_nc=dataset.train_dataset[1].x.shape[1] - 1,
-)
-
 
 if __name__ == "__main__":
 
     trainer = Trainer(
-        params, dataset, PARTS_TO_SEGMENT, device=torch.device("cpu"),
+        params,
+        # dataset,
+        PARTS_TO_SEGMENT,
+        # device=torch.device("cpu"),
     )
     trainer.fit()

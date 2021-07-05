@@ -4,7 +4,10 @@ import torch
 import pyvista as pv
 import pandas as pd
 import numpy as np
+import shutil
+import warnings
 
+warnings.filterwarnings("ignore")
 sys.path.append(os.getcwd())
 
 from omegaconf import OmegaConf
@@ -21,24 +24,42 @@ from aneurysm_segmentation3d.scripts.modelling.model import (
 from aneurysm_segmentation3d.scripts.modelling.trainer import Trainer
 
 
-BASE_DIR = "D:\\Workspace\\Python\AneurysmSegmentation\\aneurysm_segmentation3d"
-CONF_DIR = os.path.join(
-    BASE_DIR, "scripts\\data\conf\\conf_base.yaml"
-)
-DATAROOT = os.path.join(BASE_DIR, "datasets\\data")
-PROCESSED_DIR = os.listdir(
-    os.path.join(DATAROOT, "aneurysm\\processed")
-)
+if sys.platform != "linux":
+    ############################# WINDOWS PATHS #############################
+    BASE_DIR = "D:\\Workspace\\Python\AneurysmSegmentation\\aneurysm_segmentation3d"
+    CONF_DIR = os.path.join(
+        BASE_DIR, "scripts\\data\conf\\conf_base.yaml"
+    )
+    DATAROOT = os.path.join(BASE_DIR, "datasets\\data")
+    PROCESSED_DIR = os.listdir(
+        os.path.join(DATAROOT, "aneurysm\\processed")
+    )
 
-# BASE_DIR = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d"
-# CONF_DIR = os.path.join(
-#     BASE_DIR, "scripts/data/conf/conf_base.yaml"
-# )
-# DATAROOT = os.path.join(BASE_DIR, "datasets/data")
-# PROCESSED_DIR = os.listdir(
-#     os.path.join(DATAROOT, "aneurysm/processed")
-# )
-NUM_WORKERS = 2
+    # Copy Dataset file - for ModelCheckpoint reconstruction
+    SRC_DATA_PY = os.path.join(
+        BASE_DIR, "scripts\\data\\AneurysmDataset.py"
+    )
+    DST_DATA_PY = "C:\\Users\\abhil\\anaconda3\\envs\\kpconv\\lib\\site-packages\\torch_points3d\\datasets\\segmentation"
+    shutil.copy(SRC_DATA_PY, DST_DATA_PY)
+else:
+    ############################# LINUX PATHS #############################
+    BASE_DIR = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d"
+    CONF_DIR = os.path.join(
+        BASE_DIR, "scripts/data/conf/conf_base.yaml"
+    )
+    DATAROOT = os.path.join(BASE_DIR, "datasets/data")
+    PROCESSED_DIR = os.listdir(
+        os.path.join(DATAROOT, "aneurysm/processed")
+    )
+
+    # Copy Dataset file - for ModelCheckpoint reconstruction
+    SRC_DATA_PY = os.path.join(
+        BASE_DIR, "scripts/data/AneurysmDataset.py"
+    )
+    DST_DATA_PY = "/opt/conda/envs/torchpoint/lib/python3.7/site-packages/torch_points3d/datasets/segmentation"
+    shutil.copy(SRC_DATA_PY, DST_DATA_PY)
+
+NUM_WORKERS = 0
 BATCH_SIZE = 3
 PARTS_TO_SEGMENT = 5
 DELETE_OLD_FILES = False

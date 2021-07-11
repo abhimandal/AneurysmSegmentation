@@ -29,8 +29,10 @@ from torch_points3d.metrics.model_checkpoint import ModelCheckpoint
 
 # Utils import
 from torch_points3d.utils.colors import COLORS
-from torch_points3d.utils.wandb_utils import Wandb
+from aneurysm_segmentation3d.scripts.utils.wandb_utils import Wandb
 from torch_points3d.visualization import Visualizer
+
+# from torch_points3d.utils.wandb_utils import Wandb
 
 import logging
 from omegaconf import OmegaConf

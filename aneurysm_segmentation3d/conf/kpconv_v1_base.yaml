@@ -117,10 +117,10 @@ visualization:
 
 wandb:
   entity: ''
-  log: false
-  name: null
-  notes: null
-  project: default
+  log: true
+  name: 'kp_conv_v1'
+  notes: 'Base run v1'
+  project: 'aneurysm_segmentation'
   public: true
 pretty_print: false
 selection_stage: ''

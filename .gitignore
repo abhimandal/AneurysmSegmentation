@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 # *.ply
+*.patch
 
 # Custom
 # /datasets/notebooks/*checkpoints
@@ -14,6 +15,7 @@ __pycache__/
 .ipynb_checkpoints
 _build
 
+**/viz/**
 **/tensorboard/
 **/data/aneurysm/**
 *.pyc

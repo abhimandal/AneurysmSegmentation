@@ -44,13 +44,9 @@ log = logging.getLogger(__name__)
 
 
 class Trainer:
-    def __init__(
-        self,
-        cfg,
-        parts_to_segment,
-    ):
+    def __init__(self, cfg):
         self._cfg = cfg
-        self.parts_to_segment = parts_to_segment
+        # self.parts_to_segment = cfg.parts_to_segment
         self._initialize_trainer()
 
     def _initialize_trainer(self):
@@ -105,10 +101,10 @@ class Trainer:
             )
 
             self._dataset.cat_to_seg["aneur"] = np.arange(
-                0, self.parts_to_segment
+                0, self._cfg.parts_to_segment
             ).tolist()
             self._dataset.class_to_segments["aneur"] = np.arange(
-                0, self.parts_to_segment
+                0, self._cfg.parts_to_segment
             ).tolist()
 
             self._model = self._checkpoint.create_model(
@@ -122,10 +118,10 @@ class Trainer:
             )
             # Fixes
             self._dataset.cat_to_seg["aneur"] = np.arange(
-                0, self.parts_to_segment
+                0, self._cfg.parts_to_segment
             ).tolist()
             self._dataset.class_to_segments["aneur"] = np.arange(
-                0, self.parts_to_segment
+                0, self._cfg.parts_to_segment
             ).tolist()
 
             self._model: BaseModel = instantiate_model(
@@ -138,7 +134,7 @@ class Trainer:
             # Fix key error
             self._dataset.used_properties[
                 "class_to_segments"
-            ] = np.arange(0, self.parts_to_segment).tolist()
+            ] = np.arange(0, self._cfg.parts_to_segment).tolist()
 
             if not self._checkpoint.validate(
                 self._dataset.used_properties

@@ -99,7 +99,7 @@ if (len(PROCESSED_DIR)) == 0:
     )
 
     # to avoid multiprocessing error, run exit and run the script again
-    sys.exit()
+    # sys.exit()
 else:
     # Create Dataset
     dataset = AneurysmDataset.AneurysmDataset(params)
@@ -107,8 +107,5 @@ else:
 
 if __name__ == "__main__":
 
-    trainer = Trainer(
-        params,
-        PARTS_TO_SEGMENT,
-    )
+    trainer = Trainer(params)
     trainer.fit()

@@ -73,6 +73,8 @@ class Wandb:
                 tested_dataset_class,
                 otimizer_class,
                 scheduler_class,
+                f"lr={cfg.training.optim.base_lr}",
+                f"Classes={cfg.parts_to_segment}",
             ]
 
             wandb_args = {}

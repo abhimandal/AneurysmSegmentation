@@ -15,6 +15,9 @@ from torch_points3d.core.data_transform import SaveOriginalPosId
 from torch_points3d.metrics.shapenet_part_tracker import (
     ShapenetPartTracker,
 )
+from torch_points3d.metrics.segmentation_tracker import (
+    SegmentationTracker,
+)
 from torch_points3d.datasets.base_dataset import (
     BaseDataset,
     save_used_properties,
@@ -46,14 +49,14 @@ def scale_data(col: pd.Series, scaler) -> pd.Series:
 
 def convert_mesh_to_dataframe(meshply, feat_dict):
     """
-    Convert mesh values into a dataframe and add feature_names according 
+    Convert mesh values into a dataframe and add feature_names according
     to the dictionary passed and scale them between 0 and 1.
-    
+
     Args:
-        meshply (meshply obj): Mesh obj that should be converted to a 
+        meshply (meshply obj): Mesh obj that should be converted to a
             dataframe
-        features_dict (dictionary,optional): Custom features to be 
-            used to make Dataset. Values should be True or False or 
+        features_dict (dictionary,optional): Custom features to be
+            used to make Dataset. Values should be True or False or
             1 or 0 for each key.
             Accepted keys - "mean_curvature", "gauss_curvature", "fpfh",
                 "shot", "rf", "ones"
@@ -131,16 +134,16 @@ def read_mesh_vertices(
     filepath, custom_features_dict, num_parts_to_segment
 ):
     """read XYZ and features for each vertex in numpy ndarray
-    
-    Example - 
+
+    Example -
     If only XYZ to be populated then for 5 points, vertices will be:
-    
+
     vertices = array([[ 0.02699408, -0.16551971, -0.12976472],
                     [ 0.02701367, -0.16554399, -0.12981543],
                     [ 0.02698801, -0.16551463, -0.12982164],
                     [ 0.02702969, -0.16545248, -0.12979169],
                     [ 0.02706531, -0.16538525, -0.12981866]], dtype=float32)
-    
+
     """
     assert os.path.isfile(filepath)
 
@@ -168,11 +171,11 @@ def read_mesh_vertices(
 
 
 class Aneurysm(InMemoryDataset):
-    r""" Aneurysm dataset for part-level segmentation which corresponds to 
+    r"""Aneurysm dataset for part-level segmentation which corresponds to
     different WSS regions in one patient file
-    
-    
-    Each file has with 2 to 5 parts/regions based on WSS values. 
+
+
+    Each file has with 2 to 5 parts/regions based on WSS values.
 
     Args:
         root (string): Root directory where the dataset should be saved.
@@ -241,8 +244,7 @@ class Aneurysm(InMemoryDataset):
         self.data, self.slices = torch.load(path)
 
     def load_data(self, path, include_normals):
-        """This function is used twice to load data for both raw and pre_transformed
-        """
+        """This function is used twice to load data for both raw and pre_transformed"""
         data, slices = torch.load(path)
         data.x = data.x if include_normals else None
 
@@ -403,7 +405,7 @@ class Aneurysm(InMemoryDataset):
 
 
 class AneurysmDataset(BaseDataset):
-    """ Wrapper around Aneurysm that creates train and test datasets.
+    """Wrapper around Aneurysm that creates train and test datasets.
 
     Parameters
     ----------
@@ -496,7 +498,10 @@ class AneurysmDataset(BaseDataset):
         Returns:
             [BaseTracker] -- tracker
         """
-        return ShapenetPartTracker(
+        # return ShapenetPartTracker(
+        #     self, wandb_log=wandb_log, use_tensorboard=tensorboard_log
+        # )
+        return SegmentationTracker(
             self, wandb_log=wandb_log, use_tensorboard=tensorboard_log
         )
 

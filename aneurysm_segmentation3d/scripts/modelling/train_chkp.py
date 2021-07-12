@@ -18,7 +18,7 @@ from torch_points3d.core.common_modules.base_modules import (
 )
 
 # Own Libs
-from aneurysm_segmentation3d.scripts.data import AneurysmDataset
+from aneurysm_segmentation3d.scripts.dataset import AneurysmDataset
 from aneurysm_segmentation3d.scripts.modelling.model import (
     PartSegKPConv,
 )
@@ -38,7 +38,7 @@ if sys.platform != "linux":
 
     # Copy Dataset file - for ModelCheckpoint reconstruction
     SRC_DATA_PY = os.path.join(
-        BASE_DIR, "scripts\\data\\AneurysmDataset.py"
+        BASE_DIR, "scripts\\dataset\\AneurysmDataset.py"
     )
     DST_DATA_PY = "C:\\Users\\abhil\\anaconda3\\envs\\kpconv\\lib\\site-packages\\torch_points3d\\datasets\\segmentation"
     shutil.copy(SRC_DATA_PY, DST_DATA_PY)
@@ -53,7 +53,7 @@ else:
 
     # Copy Dataset file - for ModelCheckpoint reconstruction
     SRC_DATA_PY = os.path.join(
-        BASE_DIR, "scripts/data/AneurysmDataset.py"
+        BASE_DIR, "scripts/dataset/AneurysmDataset.py"
     )
     DST_DATA_PY = "/opt/conda/envs/torchpoint/lib/python3.7/site-packages/torch_points3d/datasets/segmentation"
     shutil.copy(SRC_DATA_PY, DST_DATA_PY)

@@ -24,23 +24,44 @@ train_transforms:                             # Data augmentation pipeline
 #       transform: FixedPoints
 parts_to_segment: 5
 
-raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '5_BM', '6_BM', '7_BP', '8_BP', 
-  '9_KBW', '10_SUM', '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM', 
-  '19_EM', '20_EM', '21_FA', '22_FA', '23_HJ', '24_HJ', '25_HM', '26_HM', '27_HM', 
-  '28_JM', '29_JM', '30_JM', '31_JM', '32_JM', '33_KBB', '34_KBB', '35_KBB', '36_KBB', 
-  '37_KBB', '38_KBB', '39_KBB', '40_KBB', '41_KBB', '42_KBB', '43_KBB', '44_AC', '45_AC', 
-  '46_LE', '47_LE', '48_LE', '50_LE', '51_LE', '52_LE', '54_MR', '55_MR', '56_WA', '57_SF', 
-  '58_SI', '59_SI']
+raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '6_BM', '7_BP', '8_BP', '9_KBW', '10_SUM',
+      '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM',
+      '19_EM', '20_EM', '21_FA', '22_FA', '23_HJ', '24_HJ', '25_HM',
+      '26_HM', '27_HM', '28_JM', '29_JM', '30_JM', '31_JM', '32_JM',
+      '33_KBB', '34_KBB', '35_KBB', '36_KBB', '37_KBB', '38_KBB',
+      '39_KBB', '40_KBB', '41_KBB', '42_KBB', '43_KBB', '44_AC', '45_AC',
+      '46_LE', '47_LE', '48_LE', '49_LE', '50_LE', '51_LE', '52_LE',
+      '53_LS', '54_MR', '55_MR', '56_WA', '57_SF', '58_SI', '59_SI',
+      '1_AK', '60_BL', '61_BN', '62_CA', '63_CA', '64_CA', '65_FU',
+      '66_GI', '67_HC', '68_HD', '69_HI', '70_HI', '71_HRA', '72_HRA',
+      '73_HS', '74_HS', '75_IS', '76_JM', '77_KA', '78_KB', '79_KBB',
+      '80_KBB', '81_KBB', '82_KBB', '83_KBB', '85_KG', '86_KI', '87_KJ',
+      '88_KR', '89_LE', '90_BMW', '91_LS', '92_MAS', '93_MAS', '94_MAS',
+      '95_MAS', '96_MAS', '97_MD', '98_MJ', '99_MM', '100_MR', '101_MR',
+      '102_OC', '104_PH', '105_RS', '106_RU', '107_SA', '108_SB',
+      '109_SG', '110_SK', '111_SK', '112_SM', '113_SN', '114_SR',
+      '115_SR', '117_TI', '118_TI', '119_TI', '120_TM', '121_TR',
+      '122_TR', '123_TR', '124_VA', '125_VT', '126_WD', '128_WW',
+      '129_ZK', '130_ZK', '131_ZK']
 shuffled_splits:
-  {train: ['30_JM', '46_LE', '55_MR', '51_LE', '54_MR', '2_BC','44_AC', '27_HM', 
-        '3_BC', '31_JM', '47_LE', '19_EM','25_HM', '45_AC', '59_SI', '52_LE',
-        '58_SI', '12_GAW', '9_KBW', '34_KBB', '22_FA', '18_EM', '7_BP', '50_LE',
-        '57_SF', '38_KBB', '42_KBB', '26_HM', '37_KBB', '13_PMM', '39_KBB', '36_KBB', 
-        '35_KBB','14_TR', '5_BM', '56_WA', '11_DHM', '10_SUM', '40_KBB', '41_KBB'], 
-  val: ['16_TR','24_HJ','48_LE', '23_HJ','8_BP', '29_JM', '21_FA', '4_BC','33_KBB','43_KBB'],
-  test: ['28_JM', '32_JM','15_TR','6_BM', '20_EM']
+  {'train': ['131_ZK', '102_OC', '27_HM', '6_BM','113_SN','101_MR','48_LE','4_BC',
+        '49_LE', '91_LS', '32_JM',  '67_HC','130_ZK', '70_HI', '55_MR','97_MD', 
+        '122_TR', '124_VA', '120_TM', '31_JM', '7_BP','109_SG','89_LE','47_LE', 
+        '75_IS', '69_HI', '78_KB','73_HS', '126_WD','80_KBB','35_KBB', '30_JM',
+        '26_HM', '25_HM', '118_TI','105_RS','15_TR','93_MAS','72_HRA','121_TR', 
+        '23_HJ', '106_RU', '123_TR', '16_TR', '61_BN', '50_LE','24_HJ','68_HD',
+        '110_SK', '64_CA','111_SK','86_KI', '108_SB', '2_BC', '3_BC', '10_SUM', 
+        '42_KBB','114_SR', '115_SR','41_KBB','76_JM','13_PMM','14_TR','40_KBB',
+        '54_MR', '12_GAW', '9_KBW','99_MM','92_MAS', '46_LE','37_KBB','119_TI',
+        '65_FU', '22_FA', '19_EM', '21_FA','57_SF','88_KR','90_BMW', '34_KBB'], 
+  'val': ['128_WW','77_KA','83_KBB', '51_LE','74_HS','1_AK', '8_BP','60_BL',
+          '95_MAS','79_KBB','59_SI','56_WA', '66_GI', '38_KBB','94_MAS', '98_MJ',
+          '36_KBB', '20_EM','39_KBB', '104_PH', '43_KBB', '81_KBB'],
+  'test': ['112_SM','85_KG','63_CA', '82_KBB', '87_KJ','29_JM', '53_LS','117_TI',
+        '28_JM','62_CA','96_MAS', '125_VT', '58_SI', '52_LE', '100_MR', '44_AC',
+        '18_EM','33_KBB','71_HRA', '11_DHM','107_SA', '45_AC', '129_ZK' ]
   }
-features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":0,"shot":1, "rf":0, "ones":0}
+features_to_include: {"mean_curvature":0, "gauss_curvature":0, "fpfh":0,"shot":0, "rf":0, "ones":1}
 data:
   task: ${task} 
   class: ${class}
@@ -72,7 +93,7 @@ training:
   batch_size: 2
   checkpoint_dir: ''
   cuda: 0
-  enable_cudnn: false
+  enable_cudnn: true
   epochs: 3
   num_workers: 0
   optim:
@@ -121,7 +142,7 @@ visualization:
 
 wandb:
   entity: ''
-  log: true
+  log: false
   name: 'test_config_2'
   notes: 'Base run v1'
   project: 'aneurysm_segmentation'

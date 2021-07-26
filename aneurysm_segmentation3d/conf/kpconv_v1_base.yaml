@@ -1,6 +1,6 @@
 task: segmentation 
 class: AneurysmDataset.AneurysmDataset
-first_subsampling: 0.02    
+first_subsampling: 0.005    
 dataset_name: 'aneurysm'
 pre_transforms:                               # Offline transforms, done only once
     - transform: NormalizeScale           
@@ -22,6 +22,8 @@ train_transforms:                             # Data augmentation pipeline
 #     - lparams: 
 #       - 8000
 #       transform: FixedPoints
+parts_to_segment: 5
+
 raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '5_BM', '6_BM', '7_BP', '8_BP', 
   '9_KBW', '10_SUM', '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM', 
   '19_EM', '20_EM', '21_FA', '22_FA', '23_HJ', '24_HJ', '25_HM', '26_HM', '27_HM', 
@@ -59,24 +61,26 @@ tracker_options:
   make_submission: false
   track_boxes: true
 
-lr_scheduler:
-  class: ExponentialLR
-  params:
-    gamma: 0.9885
+# lr_scheduler:
+#   class: ExponentialLR
+#   params:
+#     gamma: 0.9885
+
+# lr_scheduler: -1
 
 training:
   batch_size: 2
   checkpoint_dir: ''
   cuda: 0
   enable_cudnn: false
-  epochs: 40
+  epochs: 3
   num_workers: 0
   optim:
     base_lr: 0.01
-    grad_clip: 100
+    grad_clip: -1
     lr_scheduler: ${lr_scheduler}
     lr_clip: 1.0e-05
-    decay_step: 2
+    # decay_step: 2
     optimizer:
       class: SGD
       params:
@@ -91,7 +95,7 @@ training:
         decay_step: 10
   precompute_multi_scale: true
   shuffle: true
-  weight_name: latest
+  weight_name: miou
 
 update_lr_scheduler_on: on_epoch
 
@@ -99,7 +103,7 @@ visualization:
   activate: false
   deterministic: true
   format: pointcloud
-  num_samples_per_epoch: 10
+  num_samples_per_epoch: 1
   saved_keys:
     pos:
     - - x
@@ -118,7 +122,7 @@ visualization:
 wandb:
   entity: ''
   log: true
-  name: 'kp_conv_v1'
+  name: 'test_config_2'
   notes: 'Base run v1'
   project: 'aneurysm_segmentation'
   public: true

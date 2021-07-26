@@ -66,13 +66,13 @@ class Wandb:
             otimizer_class = getattr(
                 cfg.training.optim.optimizer, "class"
             )
-            scheduler_class = getattr(cfg.lr_scheduler, "class")
+            # scheduler_class = getattr(cfg.lr_scheduler, "class")
             tags = [
                 cfg.model_name,
                 model_class.split(".")[0],
                 tested_dataset_class,
                 otimizer_class,
-                scheduler_class,
+                # scheduler_class,
                 f"lr={cfg.training.optim.base_lr}",
                 f"Classes={cfg.parts_to_segment}",
             ]

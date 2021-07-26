@@ -27,6 +27,9 @@ from aneurysm_segmentation3d.scripts.modelling.trainer_chkp import (
 )
 
 
+DELETE_OLD_FILES = False
+PARTS_TO_SEGMENT = 5
+
 if sys.platform != "linux":
     ############################# WINDOWS PATHS #############################
     BASE_DIR = "D:\\Workspace\\Python\AneurysmSegmentation\\aneurysm_segmentation3d"
@@ -42,6 +45,18 @@ if sys.platform != "linux":
     )
     DST_DATA_PY = "C:\\Users\\abhil\\anaconda3\\envs\\kpconv\\lib\\site-packages\\torch_points3d\\datasets\\segmentation"
     shutil.copy(SRC_DATA_PY, DST_DATA_PY)
+
+    # Load Config file
+    params = OmegaConf.load(CONF_DIR)
+    params.dataroot = DATAROOT
+    params.parts_to_segment = PARTS_TO_SEGMENT
+
+    # Copy Config for wandb upload
+    SRC_CONFIG = CONF_DIR
+    DST_CONFIG = os.path.join(BASE_DIR, "conf\\config_run.yaml")
+    params.config_run_path = DST_CONFIG  # make entry in config
+    shutil.copy(SRC_CONFIG, DST_CONFIG)
+
 else:
     ############################# LINUX PATHS #############################
     BASE_DIR = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d"
@@ -58,18 +73,17 @@ else:
     DST_DATA_PY = "/opt/conda/envs/torchpoint/lib/python3.7/site-packages/torch_points3d/datasets/segmentation"
     shutil.copy(SRC_DATA_PY, DST_DATA_PY)
 
-NUM_WORKERS = 0
-BATCH_SIZE = 3
-PARTS_TO_SEGMENT = 5
-DELETE_OLD_FILES = False
+    # Load Config file
+    params = OmegaConf.load(CONF_DIR)
+    params.dataroot = DATAROOT
+    # params.parts_to_segment = PARTS_TO_SEGMENT
 
-# Load Config file
-params = OmegaConf.load(CONF_DIR)
-params.dataroot = DATAROOT
-params.parts_to_segment = PARTS_TO_SEGMENT
+    # Copy Config for wandb upload
+    SRC_CONFIG = CONF_DIR
+    DST_CONFIG = os.path.join(BASE_DIR, "conf/config_run.yaml")
+    params.config_run_path = DST_CONFIG  # make entry in config
+    shutil.copy(SRC_CONFIG, DST_CONFIG)
 
-# create category counts
-# category_to_seg = {"aneur": np.arange(PARTS_TO_SEGMENT)}
 
 # Delete older files
 files = glob.glob(DATAROOT)

@@ -187,6 +187,8 @@ class Trainer:
                 self._cfg,
                 not self._cfg.wandb.public and self.wandb_log,
             )
+            
+            Wandb.add_file(self._cfg.config_run_path)
 
         # Run training / evaluation
         self._model = self._model.to(self._device)

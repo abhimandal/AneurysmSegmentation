@@ -187,7 +187,7 @@ class Trainer:
                 self._cfg,
                 not self._cfg.wandb.public and self.wandb_log,
             )
-            
+
             Wandb.add_file(self._cfg.config_run_path)
 
         # Run training / evaluation
@@ -212,13 +212,20 @@ class Trainer:
                 "EPOCH %i / %i", epoch, self._cfg.training.epochs
             )
             print(
-                "EPOCH No ",
+                "\nEPOCH No ",
                 "=" * 15,
+                ">",
                 epoch,
                 "/",
                 self._cfg.training.epochs,
             )
+
+            train_per_class_iou = {}
+            val_per_class_iou = {}
+            test_per_class_iou = {}
+
             self._train_epoch(epoch)
+            train_per_class_iou = self._tracker._miou_per_class
 
             if self.profiling:
                 return 0
@@ -228,13 +235,28 @@ class Trainer:
 
             if self._dataset.has_val_loader:
                 self._test_epoch(epoch, "val")
+                val_per_class_iou = self._tracker._miou_per_class
 
             if self._dataset.has_test_loaders:
                 self._test_epoch(epoch, "test")
+                test_per_class_iou = self._tracker._miou_per_class
+
+            print("=" * 120)
+            if len(self._dataset.weight_classes) != 0:
+                print(
+                    "Weighting class ratio : ",
+                    self._dataset.weight_classes,
+                )
+            print("Train per class iou   : ", train_per_class_iou)
+            print("Val per class iou     : ", val_per_class_iou)
+            print("Test per class iou    : ", test_per_class_iou)
+            print("=" * 120)
 
     def _train_epoch(self, epoch):
         self._model.train()
-        print("Learning Rate", "=" * 11, self._model.learning_rate)
+        print(
+            "Learning Rate", "=" * 11, ">", self._model.learning_rate
+        )
         self._tracker.reset("train")
         self._visualizer.reset(epoch, "train")
         train_loader = self._dataset.train_dataloader
@@ -296,9 +318,9 @@ class Trainer:
                 iter_data_time = time.time()
                 with Ctq(loader) as tq_loader:
                     for data in tq_loader:
+                        t_data = time.time() - iter_data_time
+                        iter_start_time = time.time()
                         with torch.no_grad():
-                            t_data = time.time() - iter_data_time
-                            iter_start_time = time.time()
                             self._model.set_input(data, self._device)
                             self._model.forward(epoch=epoch)
                             self._tracker.track(
@@ -306,15 +328,15 @@ class Trainer:
                                 data=data,
                                 **self.tracker_options,
                             )
-                            tq_loader.set_postfix(
-                                **self._tracker.get_metrics(),
-                                data_loading=float(t_data),
-                                iteration=float(
-                                    time.time() - iter_start_time
-                                ),
-                                color=COLORS.TEST_COLOR,
-                            )
-                            iter_data_time = time.time()
+                        tq_loader.set_postfix(
+                            **self._tracker.get_metrics(),
+                            data_loading=float(t_data),
+                            iteration=float(
+                                time.time() - iter_start_time
+                            ),
+                            color=COLORS.TEST_COLOR,
+                        )
+                        iter_data_time = time.time()
 
                         if (
                             self.has_visualization

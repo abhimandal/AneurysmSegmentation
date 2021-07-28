@@ -75,6 +75,7 @@ class Wandb:
                 # scheduler_class,
                 f"lr={cfg.training.optim.base_lr}",
                 f"Classes={cfg.parts_to_segment}",
+                cfg.wandb.notes,
             ]
 
             wandb_args = {}

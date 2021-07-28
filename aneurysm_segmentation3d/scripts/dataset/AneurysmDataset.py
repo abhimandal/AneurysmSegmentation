@@ -76,18 +76,18 @@ def convert_mesh_to_dataframe(meshply, feat_dict):
         df["mean_curv"] = pd.Series(
             meshply.elements[0].data["mean_curv"]
         )
-        # Scaler for the feature
-        df["mean_curv"] = scale_data(df["mean_curv"], min_max_scaler)
+        # # Scaler for the feature
+        # df["mean_curv"] = scale_data(df["mean_curv"], min_max_scaler)
 
     ###### FEATURE: GAUSSIAN CURVATURE ######
     if [v for k, v in feat_dict.items() if k == "gauss_curvature"][0]:
         df["gauss_curv"] = pd.Series(
             meshply.elements[0].data["gauss_curv"]
         )
-        # Scaler for the feature
-        df["gauss_curv"] = scale_data(
-            df["gauss_curv"], min_max_scaler
-        )
+        # # Scaler for the feature
+        # df["gauss_curv"] = scale_data(
+        #     df["gauss_curv"], min_max_scaler
+        # )
 
     ###### FEATURE: FPFH DESCRIPTOR ######
     if [v for k, v in feat_dict.items() if k == "fpfh"][0]:
@@ -504,4 +504,3 @@ class AneurysmDataset(BaseDataset):
         return SegmentationTracker(
             self, wandb_log=wandb_log, use_tensorboard=tensorboard_log
         )
-

@@ -1,6 +1,6 @@
 task: segmentation 
 class: AneurysmDataset.AneurysmDataset
-first_subsampling: 0.02    
+first_subsampling: 0.005    
 dataset_name: 'aneurysm'
 pre_transforms:                               # Offline transforms, done only once
     - transform: NormalizeScale           
@@ -23,7 +23,8 @@ train_transforms:                             # Data augmentation pipeline
 #       - 8000
 #       transform: FixedPoints
 parts_to_segment: 5
-features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":0,"shot":0, "rf":0, "ones":0}
+features_to_include: {"mean_curvature":1, "gauss_curvature":0, "fpfh":0,"shot":0, "rf":0, "ones":0}
+class_weight_method: "sqrt"
 
 raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '6_BM', '7_BP', '8_BP', '9_KBW', '10_SUM',
       '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM',
@@ -56,29 +57,34 @@ shuffled_splits:
         '54_MR', '12_GAW', '9_KBW','99_MM','92_MAS', '46_LE','37_KBB','119_TI',
         '65_FU', '22_FA', '19_EM', '21_FA','57_SF','88_KR','90_BMW', '34_KBB'
         ], 
-  'val': ['128_WW','77_KA','83_KBB', '51_LE','74_HS','1_AK', '8_BP','60_BL',
+  'val': ['128_WW','77_KA',
+          '83_KBB', '51_LE','74_HS','1_AK', '8_BP','60_BL',
           '95_MAS','79_KBB','59_SI','56_WA', '66_GI', '38_KBB','94_MAS', '98_MJ',
           '36_KBB', '20_EM','39_KBB', '104_PH', '43_KBB', '81_KBB'
           ],
-  'test': ['112_SM','85_KG','63_CA', '82_KBB', '87_KJ','29_JM', '53_LS','117_TI',
+  'test': ['112_SM','85_KG',
+        '63_CA', '82_KBB', '87_KJ','29_JM', '53_LS','117_TI',
         '28_JM','62_CA','96_MAS', '125_VT', '58_SI', '52_LE', '100_MR', '44_AC',
         '18_EM','33_KBB','71_HRA', '11_DHM','107_SA', '45_AC', '129_ZK' 
         ]
   }
+
 data:
   task: ${task} 
   class: ${class}
   first_subsampling:  ${first_subsampling}
   use_category: true
+  class_weight_method: "sqrt"
 
-debugging:
-  early_break: true
-  find_neighbour_dist: false
-  num_batches: 50
-  profiling: false
-
-  tensorboard:
-  log: true
+wandb:
+  entity: ''
+  log: false
+  name: 'Mean_weighted_S0.005_0.01'
+  notes: 'T2.3'
+  project: 'aneurysm_segmentation'
+  public: true
+pretty_print: false
+selection_stage: ''
 
 tracker_options:
   full_res: false
@@ -91,16 +97,17 @@ tracker_options:
 #     gamma: 0.9885
 
 # lr_scheduler: -1
+update_lr_scheduler_on: on_epoch
 
 training:
   batch_size: 2
   checkpoint_dir: ''
   cuda: 0
   enable_cudnn: true
-  epochs: 200
+  epochs: 100
   num_workers: 0
   optim:
-    base_lr: 0.001
+    base_lr: 0.01
     grad_clip: -1
     lr_scheduler: ${lr_scheduler}
     lr_clip: 1.0e-05
@@ -121,7 +128,14 @@ training:
   shuffle: true
   weight_name: miou
 
-update_lr_scheduler_on: on_epoch
+debugging:
+  early_break: true
+  find_neighbour_dist: false
+  num_batches: 50
+  profiling: false
+
+tensorboard:
+  log: false
 
 visualization:
   activate: false
@@ -143,15 +157,6 @@ visualization:
     - - l
       - float
 
-wandb:
-  entity: ''
-  log: true
-  name: 'Mean_Gauss_0.001'
-  notes: 'T3.3'
-  project: 'aneurysm_segmentation'
-  public: true
-pretty_print: false
-selection_stage: ''
 
 model_name: KPConvPaper
 

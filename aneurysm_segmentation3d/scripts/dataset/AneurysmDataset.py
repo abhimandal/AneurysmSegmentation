@@ -476,6 +476,12 @@ class AneurysmDataset(BaseDataset):
             pre_transform=self.pre_transform,
             is_test=is_test,
         )
+
+        if dataset_opt.class_weight_method:
+            self.add_weights(
+                class_weight_method=dataset_opt.class_weight_method
+            )
+
         # self._categories = self.train_dataset.categories
 
     @property  # type: ignore

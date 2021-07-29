@@ -242,8 +242,7 @@ class Trainer:
                 test_per_class_iou = self._tracker._miou_per_class
 
             print("=" * 120)
-            if len(self._dataset.weight_classes) != 0:
-                print(
+            print(
                     "Weighting class ratio : ",
                     self._dataset.weight_classes,
                 )

@@ -1,6 +1,6 @@
 task: segmentation 
 class: AneurysmDataset.AneurysmDataset
-first_subsampling: 0.005    
+first_subsampling: 0.02    
 dataset_name: 'aneurysm'
 pre_transforms:                               # Offline transforms, done only once
     - transform: NormalizeScale           
@@ -22,7 +22,7 @@ train_transforms:                             # Data augmentation pipeline
 #     - lparams: 
 #       - 8000
 #       transform: FixedPoints
-parts_to_segment: 5
+parts_to_segment: 3
 features_to_include: {"mean_curvature":1, "gauss_curvature":0, "fpfh":0,"shot":0, "rf":0, "ones":0}
 class_weight_method: "sqrt"
 
@@ -55,17 +55,18 @@ shuffled_splits:
         '110_SK', '64_CA','111_SK','86_KI', '108_SB', '2_BC', '3_BC', '10_SUM', 
         '42_KBB','114_SR', '115_SR','41_KBB','76_JM','13_PMM','14_TR','40_KBB',
         '54_MR', '12_GAW', '9_KBW','99_MM','92_MAS', '46_LE','37_KBB','119_TI',
-        '65_FU', '22_FA', '19_EM', '21_FA','57_SF','88_KR','90_BMW', '34_KBB'
+        '65_FU', '22_FA', '19_EM', '21_FA','57_SF','88_KR','90_BMW', '34_KBB',
         ], 
   'val': ['128_WW','77_KA',
           '83_KBB', '51_LE','74_HS','1_AK', '8_BP','60_BL',
           '95_MAS','79_KBB','59_SI','56_WA', '66_GI', '38_KBB','94_MAS', '98_MJ',
-          '36_KBB', '20_EM','39_KBB', '104_PH', '43_KBB', '81_KBB'
+          '36_KBB', '20_EM','39_KBB', '104_PH', '43_KBB', '81_KBB',
+          '28_JM','62_CA','96_MAS', '125_VT', '58_SI', '52_LE', '100_MR', '44_AC',
           ],
   'test': ['112_SM','85_KG',
         '63_CA', '82_KBB', '87_KJ','29_JM', '53_LS','117_TI',
-        '28_JM','62_CA','96_MAS', '125_VT', '58_SI', '52_LE', '100_MR', '44_AC',
-        '18_EM','33_KBB','71_HRA', '11_DHM','107_SA', '45_AC', '129_ZK' 
+        
+        '18_EM','33_KBB','71_HRA', '11_DHM','107_SA', '45_AC', '129_ZK', 
         ]
   }
 
@@ -78,9 +79,9 @@ data:
 
 wandb:
   entity: ''
-  log: false
-  name: 'Mean_weighted_S0.005_0.01'
-  notes: 'T2.3'
+  log: true
+  name: 'M_gfso_P3_S0.02_0.001'
+  notes: 'T3.5'
   project: 'aneurysm_segmentation'
   public: true
 pretty_print: false
@@ -104,18 +105,18 @@ training:
   checkpoint_dir: ''
   cuda: 0
   enable_cudnn: true
-  epochs: 100
+  epochs: 400
   num_workers: 0
   optim:
-    base_lr: 0.01
+    base_lr: 0.001
     grad_clip: -1
     lr_scheduler: ${lr_scheduler}
     lr_clip: 1.0e-05
     # decay_step: 2
     optimizer:
-      class: SGD
+      class: Adam
       params:
-        momentum: 0.98
+        # momentum: 0.98
         lr: ${training.optim.base_lr}
     bn_scheduler:
       bn_policy: step_decay

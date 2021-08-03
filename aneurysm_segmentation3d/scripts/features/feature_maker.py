@@ -21,6 +21,7 @@ from plyfile import PlyData, PlyElement, PlyProperty, PlyListProperty
 
 # ML
 from sklearn.decomposition import PCA
+from scipy.spatial import cKDTree
 
 
 # Define CONSTANTS
@@ -163,6 +164,13 @@ def get_total_runtime(start, end, return_time=False):
 ############################################
 ############  Downsampled WSS   ############
 ############################################
+def idx_to_WSS(df_org, row, kd_idxs):
+    # Get list of nearest original indexes for the current downsampled index
+    idxs = kd_idxs[int(row["index"])]
+
+    # calculate median from the
+    WSS_down = np.median(df_org.loc[idxs].WSS)
+    return WSS_down
 
 
 def calculate_downsampled_WSS(PATIENT_ID):
@@ -172,17 +180,6 @@ def calculate_downsampled_WSS(PATIENT_ID):
     )
 
     start = time.time()
-
-    # Read original file with WSS
-    df_wss = pd.read_csv(
-        os.path.join(INPUT_PATH, f"{PATIENT_ID}{WSS_FILENAME}")
-    )
-    # Round the points
-    df_wss = np.around(df_wss, 8).copy()
-
-    # Create a df to save the files
-    columns_wss_downsampled = ["x", "y", "z", "WSS"]
-    df_wss_downsampled = pd.DataFrame(columns=columns_wss_downsampled)
 
     # Read Original and Downsampled point cloud
     pc_org = o3d.io.read_point_cloud(
@@ -194,58 +191,38 @@ def calculate_downsampled_WSS(PATIENT_ID):
         )
     )
 
-    # Build tree for original point cloud
-    kdtree_org = o3d.geometry.KDTreeFlann(pc_org)
+    # Read original file with WSS
+    df_wss = pd.read_csv(
+        os.path.join(INPUT_PATH, f"{PATIENT_ID}{WSS_FILENAME}")
+    )
+    # Round the points
+    df_wss = np.around(df_wss, 8).copy()
 
-    for i in range(np.array(pc_down.points).shape[0]):
-        #     for i in range(10):
+    df_down = pd.DataFrame(
+        np.around(np.array(pc_down.points), decimals=8),
+        columns=df_wss.columns.values[:3],
+    )
+    df_down = df_down.reset_index()
 
-        search_pt = np.around(np.array(pc_down.points)[i], decimals=8)
-        [k_org, idx_org, _] = kdtree_org.search_radius_vector_3d(
-            search_pt, RADIUS_SEARCH
-        )
+    # Build Tree
+    tree = cKDTree(np.around(np.array(pc_org.points), decimals=8))
+    search_pt = np.around(np.array(pc_down.points), decimals=8)
+    kd_idxs = tree.query_ball_point(search_pt, RADIUS_SEARCH)
+    # Get downsampled WSS
+    df_down["WSS"] = df_down.apply(
+        lambda row: idx_to_WSS(df_wss, row, kd_idxs), axis=1
+    )
 
-        # Get Neighbourhood points and round them for avoiding issue with merge
-        neighbour_pts = np.around(
-            np.array(pc_org.points)[idx_org], decimals=8
-        )
-        # Convert into a df - for merging
-        neighbour_df = pd.DataFrame(
-            neighbour_pts, columns=df_wss.columns.values[:3]
-        )
-
-        # Get the WSS column for the neighbourhood points
-        neighbour_df = neighbour_df.merge(
-            df_wss,
-            on=["Points:0", "Points:1", "Points:2"],
-            how="inner",
-        )
-
-        tempDF = pd.DataFrame(
-            data=np.array(
-                [
-                    [
-                        search_pt[0],
-                        search_pt[1],
-                        search_pt[2],
-                        np.median(neighbour_df.WSS),
-                    ]
-                ]
-            ),
-            columns=columns_wss_downsampled,
-        )
-        df_wss_downsampled = pd.concat(
-            [df_wss_downsampled, tempDF], ignore_index=True
-        )
+    # drop index column
+    df_down = df_down.drop(["index"], 1)
 
     end = time.time()
-
     get_total_runtime(start, end)
 
     # Round up the file to clean it.
-    df_wss_downsampled = np.around(df_wss_downsampled, 8)
+    df_down = np.around(df_down, 8)
     # Save the csv file
-    df_wss_downsampled.to_csv(
+    df_down.to_csv(
         os.path.join(
             OUTPUT_TEMP_PATH, f"{PATIENT_ID}{WSS_DOWN_FILENME}"
         )

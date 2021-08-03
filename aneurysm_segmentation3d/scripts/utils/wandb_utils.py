@@ -67,12 +67,12 @@ class Wandb:
                 cfg.training.optim.optimizer, "class"
             )
             # scheduler_class = getattr(cfg.lr_scheduler, "class")
-            features_to_include: {"mean_curvature":1, "gauss_curvature":0, "fpfh":0,"shot":0, "rf":0, "ones":0}
             mean_feat = cfg.features_to_include["mean_curvature"]
             gauss_feat = cfg.features_to_include["gauss_curvature"]
             fpfh_feat = cfg.features_to_include["fpfh"]
             shot_feat = cfg.features_to_include["shot"]
             ones_feat = cfg.features_to_include["ones"]
+
             tags = [
                 cfg.model_name,
                 # model_class.split(".")[0],
@@ -81,7 +81,8 @@ class Wandb:
                 # scheduler_class,
                 f"lr={cfg.training.optim.base_lr}",
                 f"Classes={cfg.parts_to_segment}",
-                cfg.wandb.notes,
+                f"Version={cfg.wandb.version}",
+                cfg.wandb.type,
                 f"Mean_curv={mean_feat}",
                 f"Gauss_curv={gauss_feat}",
                 f"FPFH={fpfh_feat}",

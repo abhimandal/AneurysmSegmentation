@@ -1,0 +1,3 @@
+data:
+    forward_category: "aneur" #Category of the data in the folder to be infered
+    use_category: "aneur"

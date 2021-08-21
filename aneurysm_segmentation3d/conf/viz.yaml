@@ -1,0 +1,19 @@
+num_workers: 0
+batch_size: 3
+cuda: 0
+weight_name: "miou" # Used during resume, select with model to load from [miou, macc, acc..., latest]
+enable_cudnn: True
+checkpoint_dir: "/workspace/Storage_fast/AneurysmSegmentation" # "{your_path}/outputs/2020-01-28/11-04-13" for example
+model_name: KPConvPaper
+enable_dropout: False
+output_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/scripts/visualization/out" # Where the output goes
+input_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/scripts/visualization/test_data" # Folder where to find the data
+
+# Dataset specific
+defaults:
+    - dataset: ""
+      optional: True
+
+data:
+    forward_category: "aneur"
+    # use_category: "aneur"

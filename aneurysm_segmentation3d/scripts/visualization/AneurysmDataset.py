@@ -1,6 +1,15 @@
 import torch
 import glob
 import os
+import sys
+
+sys.path.append(os.getcwd())
+
+import shutil
+import warnings
+
+warnings.filterwarnings("ignore")
+
 from torch_geometric.io import read_txt_array
 from torch_geometric.data.data import Data
 import torch_geometric.transforms as T
@@ -16,6 +25,21 @@ from torch_points3d.metrics.shapenet_part_tracker import (
 )
 from torch_points3d.datasets.segmentation.shapenet import ShapeNet
 
+# Aneurysm files
+from aneurysm_segmentation3d.scripts.dataset import AneurysmDataset
+from aneurysm_segmentation3d.scripts.dataset.AneurysmDataset import (
+    read_mesh_vertices,
+)
+from torch_points3d.metrics.segmentation_tracker import (
+    SegmentationTracker,
+)
+from plyfile import PlyData, PlyElement, PlyProperty, PlyListProperty
+from sklearn.preprocessing import (
+    StandardScaler,
+    MinMaxScaler,
+    MaxAbsScaler,
+)
+
 log = logging.getLogger(__name__)
 
 
@@ -23,9 +47,8 @@ class _ForwardAneurysm(torch.utils.data.Dataset):
     """Dataset to run forward inference on Shapenet kind of data data. Runs on a whole folder.
     Arguments:
         path: folder that contains a set of files of a given category
-        category: index of the category to use for forward inference. This value depends on how many categories the model has been trained one.
+        category: index of the category to use for forward inference. This value depends on how many categories the model has been trained on.
         transforms: transforms to be applied to the data
-        include_normals: wether to include normals for the forward inference
     """
 
     def __init__(
@@ -33,36 +56,54 @@ class _ForwardAneurysm(torch.utils.data.Dataset):
         path,
         category: int,
         transforms=None,
-        include_normals=True,
+        predict_sample_pid="18_EM",
+        raw_file_identifiers=None,
+        custom_features_dict={"shot": True},
+        num_parts_to_segment=5,
+        shuffled_splits=None,
     ):
         super().__init__()
+        self.shuffled_splits = shuffled_splits
+        self.raw_file_identifiers = raw_file_identifiers
+        self.custom_features_dict = custom_features_dict
+        self.num_parts_to_segment = num_parts_to_segment
+
         self._category = category
         self._path = path
-        self._files = sorted(
-            glob.glob(os.path.join(self._path, "*.txt"))
-        )
+        self.predict_sample_PID = predict_sample_pid
         self._transforms = transforms
-        self._include_normals = include_normals
         assert os.path.exists(self._path)
         if self.__len__() == 0:
             raise ValueError("Empty folder %s" % path)
 
     def __len__(self):
-        return len(self._files)
+        return len(self.predict_sample_PID)
 
-    def _read_file(self, filename):
-        raw = read_txt_array(filename)
-        pos = raw[:, :3]
-        x = raw[:, 3:6]
-        if raw.shape[1] == 7:
-            y = raw[:, 6].type(torch.long)
-        else:
-            y = None
-        return Data(pos=pos, x=x, y=y)
+    def _read_file(self, P_ID, index):
+        filepath = os.path.join(self._path, f"{P_ID}_pca.ply")
+
+        data = torch.from_numpy(
+            read_mesh_vertices(
+                filepath,
+                self.custom_features_dict,
+                self.num_parts_to_segment,
+            )
+        )
+        pos = data[:, :3]
+        x = data[:, 3:-1]
+        y = data[:, -1].type(torch.long)
+        # Re-assign negative classes (floating point error) to zero
+        y = torch.where(y < 0, 0, y)
+        data = Data(
+            pos=pos,
+            x=x,
+            y=y,
+        )
+        return data
 
     def get_raw(self, index):
         """returns the untransformed data associated with an element"""
-        return self._read_file(self._files[index])
+        return self._read_file(self.predict_sample_PID, index)
 
     @property
     def num_features(self):
@@ -72,26 +113,42 @@ class _ForwardAneurysm(torch.utils.data.Dataset):
         return 0
 
     def get_filename(self, index):
-        return os.path.basename(self._files[index])
+        P_ID = self.predict_sample_PID
+        return os.path.basename(
+            os.path.join(self._path, f"{P_ID}_pca.ply")
+        )
 
     def __getitem__(self, index):
-        data = self._read_file(self._files[index])
-        category = (
-            torch.ones(data.pos.shape[0], dtype=torch.long)
-            * self._category
-        )
+        data = self._read_file(self.predict_sample_PID, index)
+        category = torch.ones(data.pos.shape[0], dtype=torch.long) * 0
         setattr(data, "category", category)
         setattr(data, "sampleid", torch.tensor([index]))
-        if not self._include_normals:
-            data.x = None
+
         if self._transforms is not None:
             data = self._transforms(data)
         return data
 
 
-class _ForwardAneurysmDataset(BaseDataset):
+class ForwardAneurysmDataset(BaseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
+
+        # dataset specific
+        is_test = dataset_opt.get("is_test", False)
+        shuffled_splits = dataset_opt.get("shuffled_splits", False)
+        raw_file_identifiers = dataset_opt.get(
+            "raw_file_identifiers", False
+        )
+        custom_features_dict = dataset_opt.get(
+            "features_to_include", False
+        )
+        num_parts_to_segment = dataset_opt.get(
+            "parts_to_segment", False
+        )
+        self.cat_to_seg = {"aneur": np.arange(num_parts_to_segment)}
+        predict_sample_pid = dataset_opt.get("forward_pid", False)
+
+        # forward specific
         forward_category = dataset_opt.forward_category
         if not isinstance(forward_category, str):
             raise ValueError(
@@ -99,7 +156,10 @@ class _ForwardAneurysmDataset(BaseDataset):
                     dataset_opt.forward_category
                 )
             )
-        self._train_categories = dataset_opt.category
+
+        # modified from dataset.category
+        self._train_categories = dataset_opt.forward_category
+
         if not is_list(self._train_categories):
             self._train_categories = [self._train_categories]
 
@@ -122,21 +182,20 @@ class _ForwardAneurysmDataset(BaseDataset):
         )
 
         self._data_path = dataset_opt.dataroot
-        include_normals = (
-            dataset_opt.include_normals
-            if dataset_opt.include_normals
-            else True
-        )
 
         transforms = SaveOriginalPosId()
         for t in [self.pre_transform, self.test_transform]:
             if t:
                 transforms = T.Compose([transforms, t])
         self.test_dataset = _ForwardAneurysm(
-            self._data_path,
-            self._cat_idx,
+            path=self._data_path,
+            category=self._cat_idx,
             transforms=transforms,
-            include_normals=include_normals,
+            predict_sample_pid=predict_sample_pid,
+            raw_file_identifiers=raw_file_identifiers,
+            custom_features_dict=custom_features_dict,
+            num_parts_to_segment=num_parts_to_segment,
+            shuffled_splits=shuffled_splits,
         )
 
     def get_tracker(self, wandb_log: bool, tensorboard_log: bool):
@@ -148,7 +207,10 @@ class _ForwardAneurysmDataset(BaseDataset):
         Returns:
             [BaseTracker] -- tracker
         """
-        return ShapenetPartTracker(
+        # return ShapenetPartTracker(
+        #     self, wandb_log=wandb_log, use_tensorboard=tensorboard_log
+        # )
+        return SegmentationTracker(
             self, wandb_log=wandb_log, use_tensorboard=tensorboard_log
         )
 
@@ -200,8 +262,7 @@ class _ForwardAneurysmDataset(BaseDataset):
     @property
     def class_to_segments(self):
         classes_to_segment = {}
-        for key in self._train_categories:
-            classes_to_segment[key] = ShapeNet.seg_classes[key]
+        classes_to_segment["aneur"] = self.cat_to_seg["aneur"]
         return classes_to_segment
 
     @property

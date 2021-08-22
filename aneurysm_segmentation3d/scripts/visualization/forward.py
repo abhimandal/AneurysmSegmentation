@@ -4,6 +4,7 @@ import logging
 from omegaconf import OmegaConf
 import os
 import sys
+import shutil
 import numpy as np
 from typing import Dict
 
@@ -97,6 +98,30 @@ def main(cfg):
         train_dataset_cls.FORWARD_CLASS,
     )
     setattr(checkpoint.data_config, "dataroot", cfg.input_path)
+    setattr(
+        checkpoint.data_config,
+        "raw_file_identifiers",
+        cfg.raw_file_identifiers,
+    )
+    setattr(
+        checkpoint.data_config,
+        "features_to_include",
+        cfg.features_to_include,
+    )
+    setattr(
+        checkpoint.data_config,
+        "parts_to_segment",
+        cfg.parts_to_segment,
+    )
+    setattr(checkpoint.data_config, "forward_pid", cfg.forward_pid)
+    setattr(
+        checkpoint.data_config,
+        "class",
+        "forward.AneurysmDataset.ForwardAneurysmDataset",
+    )
+    SRC_DATA_PY = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/scripts/visualization/AneurysmDataset.py"
+    DST_DATA_PY = "/opt/conda/envs/torchpoint/lib/python3.7/site-packages/torch_points3d/datasets/segmentation/forward"
+    shutil.copy(SRC_DATA_PY, DST_DATA_PY)
 
     # Datset specific configs
     if cfg.data:
@@ -108,14 +133,7 @@ def main(cfg):
 
     # Set dataloaders
     dataset = instantiate_dataset(checkpoint.data_config)
-    dataset.create_dataloaders(
-        model,
-        cfg.batch_size,
-        cfg.shuffle,
-        cfg.num_workers,
-        False,
-    )
-    log.info(dataset)
+
     # Create dataset and mdoel
     model = checkpoint.create_model(
         dataset, weight_name=cfg.weight_name
@@ -137,7 +155,7 @@ def main(cfg):
     # model = checkpoint.create_model(
     #     dataset_properties, weight_name=cfg.weight_name
     # )
-    log.info(model)
+    # log.info(model)
     log.info(
         "Model size = %i",
         sum(
@@ -148,7 +166,7 @@ def main(cfg):
     )
 
     # Set dataloaders
-    dataset = instantiate_dataset(checkpoint.data_config)
+    # dataset = instantiate_dataset(checkpoint.data_config)
     dataset.create_dataloaders(
         model,
         cfg.batch_size,

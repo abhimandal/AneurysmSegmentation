@@ -7,6 +7,7 @@ __pycache__/
 *.so
 *.ply
 *.patch
+*.npy
 
 # Custom
 # /datasets/notebooks/*checkpoints
@@ -15,6 +16,7 @@ __pycache__/
 .ipynb_checkpoints
 _build
 
+**/conf/config_run.yaml
 **/viz/**
 **/tensorboard/
 **/data/aneurysm/**

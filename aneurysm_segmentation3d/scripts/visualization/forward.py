@@ -50,7 +50,7 @@ def run(model: BaseModel, dataset, device, output_path):
     loaders = dataset.test_dataloaders
     predicted: Dict = {}
     for loader in loaders:
-        loader.dataset.name
+        stage_name = loader.dataset.name
         with Ctq(loader) as tq_test_loader:
             for data in tq_test_loader:
                 with torch.no_grad():

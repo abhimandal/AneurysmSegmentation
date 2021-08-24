@@ -22,8 +22,8 @@ train_transforms:                             # Data augmentation pipeline
 #     - lparams: 
 #       - 8000
 #       transform: FixedPoints
-parts_to_segment: 5
-features_to_include: {"mean_curvature":0, "gauss_curvature":1, "fpfh":0,"shot":0, "rf":0, "ones":0}
+parts_to_segment: 4
+features_to_include: {"mean_curvature":0, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
 class_weight_method: "log"
 
 raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '6_BM', '7_BP', '8_BP', '9_KBW', '10_SUM',
@@ -74,15 +74,15 @@ data:
   class: ${class}
   first_subsampling:  ${first_subsampling}
   use_category: true
-  class_weight_method: "log"
+  class_weight_method: "sqrt"
 
 wandb:
   entity: ''
-  log: true
-  name: 'G_mfso_P5_S0.02_0.01_log_v3'
-  notes: ''
-  type: 'T2.3'
-  version: 'v3'
+  log: false
+  name: 'MGFO_s_P4_S0.02_0.001_v2.2'
+  notes: 'Smoothed data'
+  type: 'T3.4'
+  version: 'v2.2'
   project: 'aneurysm_segmentation'
   public: true
 pretty_print: false
@@ -106,10 +106,10 @@ training:
   checkpoint_dir: ''
   cuda: 0
   enable_cudnn: true
-  epochs: 400
+  epochs: 25
   num_workers: 0
   optim:
-    base_lr: 0.01
+    base_lr: 0.001
     grad_clip: -1
     lr_scheduler: ${lr_scheduler}
     lr_clip: 1.0e-05
@@ -140,7 +140,7 @@ tensorboard:
   log: false
 
 visualization:
-  activate: false
+  activate: true
   deterministic: true
   format: pointcloud
   num_samples_per_epoch: 1

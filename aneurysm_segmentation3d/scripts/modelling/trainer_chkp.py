@@ -123,18 +123,49 @@ class Trainer:
             self._dataset.class_to_segments["aneur"] = np.arange(
                 0, self._cfg.parts_to_segment
             ).tolist()
-
-            self._model: BaseModel = instantiate_model(
-                copy.deepcopy(self._cfg), self._dataset
-            )
+            try:
+                self._model: BaseModel = instantiate_model(
+                    copy.deepcopy(self._cfg), self._dataset
+                )
+            except:
+                print("ERRRRRROOOOOOORRRRRR in Model instantiation")
 
             self._model.instantiate_optimizers(self._cfg)
             self._model.set_pretrained_weights()
 
             # Fix key error
-            self._dataset.used_properties[
-                "class_to_segments"
-            ] = np.arange(0, self._cfg.parts_to_segment).tolist()
+            # self._dataset.used_properties[
+            #     "class_to_segments"
+            # ] = np.arange(0, self._cfg.parts_to_segment).tolist()
+
+            # self._dataset.used_properties.class_to_segments[
+            #     "aneur"
+            # ] = np.arange(0, self._cfg.parts_to_segment).tolist()
+
+            
+            
+            # def validate(run_config, data_config):
+            #     """A checkpoint is considered as valid if it can recreate the model from
+            #     a dataset config only"""
+            #     try:
+            #         instantiate_model(run_config, data_config)
+            #     except:
+            #         return False
+
+            #     return True
+
+            # self._dataset.used_properties = self._dataset
+            # if not validate(
+            #     copy.deepcopy(self._checkpoint.run_config),
+            #     self._dataset.used_properties,
+            #     # copy.deepcopy(self._cfg),
+            #     # self._dataset,
+            # ):
+            #     log.warning(
+            #         "The model will not be able to be used from pretrained weights without the corresponding dataset. Current properties are {}".format(
+            #             self._dataset.used_properties
+            #         )
+            #     )
 
             if not self._checkpoint.validate(
                 self._dataset.used_properties
@@ -243,9 +274,9 @@ class Trainer:
 
             print("=" * 120)
             print(
-                    "Weighting class ratio : ",
-                    self._dataset.weight_classes,
-                )
+                "Weighting class ratio : ",
+                self._dataset.weight_classes,
+            )
             print("Train per class iou   : ", train_per_class_iou)
             print("Val per class iou     : ", val_per_class_iou)
             print("Test per class iou    : ", test_per_class_iou)

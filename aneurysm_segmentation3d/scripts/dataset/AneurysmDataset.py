@@ -47,7 +47,15 @@ def scale_data(col: pd.Series, scaler) -> pd.Series:
     return scaled_column
 
 
-def convert_mesh_to_dataframe(meshply, feat_dict):
+def my_global_scaler(X, r_min, r_max):
+    t_min = 0
+    t_max = 1
+    return ((X - r_min) / (r_max - r_min)) * (t_max - t_min) + t_min
+
+
+def convert_mesh_to_dataframe(
+    meshply, feat_dict, scaler_type="global"
+):
     """
     Convert mesh values into a dataframe and add feature_names according
     to the dictionary passed and scale them between 0 and 1.
@@ -71,44 +79,129 @@ def convert_mesh_to_dataframe(meshply, feat_dict):
     df["y"] = pd.Series(meshply.elements[0].data["y"])
     df["z"] = pd.Series(meshply.elements[0].data["z"])
 
-    ###### FEATURE: MEAN CURVATURE ######
+    ############################################################
+    # FEATURE: MEAN CURVATURE
+    ############################################################
     if [v for k, v in feat_dict.items() if k == "mean_curvature"][0]:
         df["mean_curv"] = pd.Series(
             meshply.elements[0].data["mean_curv"]
         )
+        col = "mean_curv"
         # # Scaler for the feature
-        # df["mean_curv"] = scale_data(df["mean_curv"], min_max_scaler)
+        if scaler_type == "global":
+            r_min = -0.001
+            r_max = 0.0008
+            df.loc[df[col] < r_min] = r_min
+            df.loc[df[col] > r_max] = r_max
+            df[col] = df[col].apply(
+                lambda x: my_global_scaler(x, r_min, r_max)
+            )
+        # else:
+        # df[col] = scale_data(df[col], min_max_scaler)
 
-    ###### FEATURE: GAUSSIAN CURVATURE ######
+    ############################################################
+    # FEATURE: GAUSSIAN CURVATURE
+    ############################################################
     if [v for k, v in feat_dict.items() if k == "gauss_curvature"][0]:
         df["gauss_curv"] = pd.Series(
             meshply.elements[0].data["gauss_curv"]
         )
+        col = "gauss_curv"
         # # Scaler for the feature
+        if scaler_type == "global":
+            r_min = -11.025
+            r_max = 158.026
+            df.loc[df[col] < r_min] = r_min
+            df.loc[df[col] > r_max] = r_max
+            df[col] = df[col].apply(
+                lambda x: my_global_scaler(x, r_min, r_max)
+            )
+        # else:
         # df["gauss_curv"] = scale_data(
         #     df["gauss_curv"], min_max_scaler
         # )
 
-    ###### FEATURE: FPFH DESCRIPTOR ######
+    ############################################################
+    # FEATURE: FPFH DESCRIPTOR
+    ############################################################
     if [v for k, v in feat_dict.items() if k == "fpfh"][0]:
         df[["fpfh_1", "fpfh_2"]] = pd.DataFrame(
             meshply.elements[0].data["fpfh"].tolist()
         )
+        col = "fpfh_1"
         # Scaler for the feature
-        df["fpfh_1"] = scale_data(df["fpfh_1"], min_max_scaler)
-        df["fpfh_2"] = scale_data(df["fpfh_2"], min_max_scaler)
+        if scaler_type == "global":
+            r_min = -112.58
+            r_max = 191.905
+            df.loc[df[col] < r_min] = r_min
+            df.loc[df[col] > r_max] = r_max
+            df[col] = df[col].apply(
+                lambda x: my_global_scaler(x, r_min, r_max)
+            )
+        else:
+            df["fpfh_1"] = scale_data(df["fpfh_1"], min_max_scaler)
 
-    ###### FEATURE: SHOT DESCRIPTOR ######
+        col = "fpfh_2"
+        if scaler_type == "global":
+            r_min = -85.80
+            r_max = 144.51
+            df.loc[df[col] < r_min] = r_min
+            df.loc[df[col] > r_max] = r_max
+            df[col] = df[col].apply(
+                lambda x: my_global_scaler(x, r_min, r_max)
+            )
+        else:
+            df["fpfh_2"] = scale_data(df["fpfh_2"], min_max_scaler)
+
+    ############################################################
+    # FEATURE: SHOT DESCRIPTOR #
+    ############################################################
     if [v for k, v in feat_dict.items() if k == "shot"][0]:
         df[["shot_1", "shot_2", "shot_3"]] = pd.DataFrame(
             meshply.elements[0].data["shot"].tolist()
         )
+        col = "shot_1"
         # Scaler for the feature
-        df["shot_1"] = scale_data(df["shot_1"], min_max_scaler)
-        df["shot_2"] = scale_data(df["shot_2"], min_max_scaler)
-        df["shot_3"] = scale_data(df["shot_3"], min_max_scaler)
+        if scaler_type == "global":
+            r_min = -0.68
+            r_max = 0.854
+            df.loc[df[col] < r_min] = r_min
+            df.loc[df[col] > r_max] = r_max
+            df[col] = df[col].apply(
+                lambda x: my_global_scaler(x, r_min, r_max)
+            )
+        else:
+            df["shot_1"] = scale_data(df["shot_1"], min_max_scaler)
 
-    ###### FEATURE: SHOT_RF DESCRIPTOR ######
+        col = "shot_2"
+        # Scaler for the feature
+        if scaler_type == "global":
+            r_min = -0.63
+            r_max = 0.84
+            df.loc[df[col] < r_min] = r_min
+            df.loc[df[col] > r_max] = r_max
+            df[col] = df[col].apply(
+                lambda x: my_global_scaler(x, r_min, r_max)
+            )
+        else:
+            df["shot_2"] = scale_data(df["shot_2"], min_max_scaler)
+
+        col = "shot_3"
+        # Scaler for the feature
+        if scaler_type == "global":
+            r_min = -0.67
+            r_max = 0.76
+            df.loc[df[col] < r_min] = r_min
+            df.loc[df[col] > r_max] = r_max
+            df[col] = df[col].apply(
+                lambda x: my_global_scaler(x, r_min, r_max)
+            )
+        else:
+            df["shot_3"] = scale_data(df["shot_3"], min_max_scaler)
+
+    ############################################################
+    # FEATURE: SHOT_RF DESCRIPTOR #
+    ############################################################
     if [v for k, v in feat_dict.items() if k == "rf"][0]:
         df[["rf_1", "rf_2", "rf_3"]] = pd.DataFrame(
             meshply.elements[0].data["rf"].tolist()
@@ -118,20 +211,35 @@ def convert_mesh_to_dataframe(meshply, feat_dict):
         df["rf_2"] = scale_data(df["rf_2"], min_max_scaler)
         df["rf_3"] = scale_data(df["rf_3"], min_max_scaler)
 
-    ###### FEATURE: ADD ONES ######
+    ############################################################
+    # FEATURE: ADD ONES #
+    ############################################################
     if [v for k, v in feat_dict.items() if k == "ones"][0]:
         df["ones"] = int(1)
 
-    ###### LABEL: WSS - FOR PREDICTION ######
+    ############################################################
+    # LABEL: WSS - FOR PREDICTION #
+    ############################################################
     df["WSS"] = pd.Series(meshply.elements[0].data["WSS"])
+
+    col = "WSS"
     # Scaler for the feature
-    df["WSS"] = scale_data(df["WSS"], min_max_scaler)
+    if scaler_type == "global":
+        r_min = 0
+        r_max = 183
+        df.loc[df[col] < r_min] = r_min
+        df.loc[df[col] > r_max] = r_max
+        df[col] = df[col].apply(
+            lambda x: my_global_scaler(x, r_min, r_max)
+        )
+    else:
+        df["WSS"] = scale_data(df["WSS"], min_max_scaler)
 
     return df
 
 
 def read_mesh_vertices(
-    filepath, custom_features_dict, num_parts_to_segment
+    filepath, custom_features_dict, num_parts_to_segment, scaler_type
 ):
     """read XYZ and features for each vertex in numpy ndarray
 
@@ -151,7 +259,7 @@ def read_mesh_vertices(
         meshplydata = PlyData.read(f)
         num_verts = meshplydata["vertex"].count
         df = convert_mesh_to_dataframe(
-            meshplydata, custom_features_dict
+            meshplydata, custom_features_dict, scaler_type
         )
 
         # Categorize the WSS to different parts for part-segmentation
@@ -211,12 +319,14 @@ class Aneurysm(InMemoryDataset):
         custom_features_dict={"shot": True},
         num_parts_to_segment=5,
         shuffled_splits=None,
+        scaler_type="global",
     ):
         self.is_test = is_test
         self.shuffled_splits = shuffled_splits
         self.raw_file_identifiers = raw_file_identifiers
         self.custom_features_dict = custom_features_dict
         self.num_parts_to_segment = num_parts_to_segment
+        self.scaler_type = scaler_type
         super(Aneurysm, self).__init__(
             root, transform, pre_transform, pre_filter
         )
@@ -292,6 +402,7 @@ class Aneurysm(InMemoryDataset):
                     filepath,
                     self.custom_features_dict,
                     self.num_parts_to_segment,
+                    self.scaler_type,
                 )
             )
             pos = data[:, :3]
@@ -437,6 +548,7 @@ class AneurysmDataset(BaseDataset):
         num_parts_to_segment = dataset_opt.get(
             "parts_to_segment", False
         )
+        scaler_type = dataset_opt.get("scaler_type", False)
         # self.cat_to_seg = dataset_opt.get("category_to_seg", False)
         # self.cat_to_seg = cat_to_seg
         self.cat_to_seg = {"aneur": np.arange(num_parts_to_segment)}
@@ -450,6 +562,7 @@ class AneurysmDataset(BaseDataset):
             split="train",
             pre_transform=self.pre_transform,
             transform=self.train_transform,
+            scaler_type=scaler_type,
             is_test=is_test,
         )
 
@@ -462,6 +575,7 @@ class AneurysmDataset(BaseDataset):
             split="val",
             pre_transform=self.pre_transform,
             transform=self.val_transform,
+            scaler_type=scaler_type,
             is_test=is_test,
         )
 
@@ -474,6 +588,7 @@ class AneurysmDataset(BaseDataset):
             split="test",
             transform=self.test_transform,
             pre_transform=self.pre_transform,
+            scaler_type=scaler_type,
             is_test=is_test,
         )
 

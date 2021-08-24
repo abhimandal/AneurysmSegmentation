@@ -60,7 +60,7 @@ if sys.platform != "linux":
 else:
     ############################# LINUX PATHS #############################
     BASE_DIR = "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d"
-    CONF_DIR = os.path.join(BASE_DIR, "conf/kpconv_v2_base.yaml")
+    CONF_DIR = os.path.join(BASE_DIR, "conf/kpconv_v3_base.yaml")
     DATAROOT = os.path.join(BASE_DIR, "datasets/data")
     PROCESSED_DIR = os.listdir(
         os.path.join(DATAROOT, "aneurysm/processed")

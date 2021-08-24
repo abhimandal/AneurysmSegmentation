@@ -1,0 +1,240 @@
+task: segmentation 
+class: AneurysmDataset.AneurysmDataset
+first_subsampling: 0.02   
+dataset_name: 'aneurysm'
+pre_transforms:                               # Offline transforms, done only once
+    - transform: NormalizeScale           
+    - transform: GridSampling3D
+      params:
+        size: ${first_subsampling}
+train_transforms:                             # Data augmentation pipeline
+    # - lparams:
+    #   - 8000
+    # - transform: FixedPoints
+    - transform: RandomNoise
+      params:
+        sigma: 0.02
+        clip: 0.05
+    - transform: RandomScaleAnisotropic
+      params:
+        scales: [0.9,1.1]
+# test_transforms:
+#     - lparams: 
+#       - 8000
+#       transform: FixedPoints
+parts_to_segment: 10
+features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":0,"shot":0, "rf":0, "ones":1}
+class_weight_method: "log"
+scaler_type: "global" #global or local
+
+
+raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '6_BM', '7_BP', '8_BP', '9_KBW', '10_SUM',
+      '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM',
+      '19_EM', '20_EM', '21_FA', '22_FA', '23_HJ', '24_HJ', '25_HM',
+      '26_HM', '27_HM', '28_JM', '29_JM', '30_JM', '31_JM', '32_JM',
+      '33_KBB', '34_KBB', '35_KBB', '36_KBB', '37_KBB', '38_KBB',
+      '39_KBB', '40_KBB', '41_KBB', '42_KBB', '43_KBB', '44_AC', '45_AC',
+      '46_LE', '47_LE', '48_LE', '49_LE', '50_LE', '51_LE', '52_LE',
+      '53_LS', '54_MR', '55_MR', '56_WA', '57_SF', '58_SI', '59_SI',
+      '1_AK', '60_BL', '61_BN', '62_CA', '63_CA', '64_CA', '65_FU',
+      '66_GI', '67_HC', '68_HD', '69_HI', '70_HI', '71_HRA', '72_HRA',
+      '73_HS', '74_HS', '75_IS', '76_JM', '77_KA', '78_KB', '79_KBB',
+      '80_KBB', '81_KBB', '82_KBB', '83_KBB', '85_KG', '86_KI', '87_KJ',
+      '88_KR', '89_LE', '90_BMW', '91_LS', '92_MAS', '93_MAS', '94_MAS',
+      '95_MAS', '96_MAS', '97_MD', '98_MJ', '99_MM', '100_MR', '101_MR',
+      '102_OC', '104_PH', '105_RS', '106_RU', '107_SA', '108_SB',
+      '109_SG', '110_SK', '111_SK', '112_SM', '113_SN', '114_SR',
+      '115_SR', '117_TI', '118_TI', '119_TI', '120_TM', '121_TR',
+      '122_TR', '123_TR', '124_VA', '125_VT', '126_WD', '128_WW',
+      '129_ZK', '130_ZK', '131_ZK']
+shuffled_splits:
+  {'train': ['102_OC', '27_HM', '113_SN','101_MR','48_LE','4_BC',
+         '91_LS', '32_JM',  '67_HC','130_ZK', '55_MR','97_MD', 
+         '122_TR', '124_VA', '120_TM', '31_JM','109_SG','89_LE', 
+         '75_IS', '69_HI', '78_KB','73_HS', '126_WD','80_KBB','35_KBB', '30_JM',
+         '26_HM', '118_TI','105_RS','15_TR','93_MAS',
+         '106_RU', '123_TR', '16_TR', '61_BN', '50_LE','68_HD',
+         '110_SK','111_SK','86_KI', '108_SB', '2_BC', '3_BC', '10_SUM', 
+         '42_KBB','114_SR', '115_SR','41_KBB','76_JM','13_PMM','14_TR','40_KBB',
+         '54_MR', '12_GAW', '9_KBW','99_MM','92_MAS', '46_LE','37_KBB','119_TI',
+         '65_FU', '22_FA',  '21_FA','57_SF','88_KR','90_BMW', '34_KBB',
+         '60_BL','81_KBB','58_SI',], 
+  'val': ['77_KA','83_KBB', '51_LE','74_HS','1_AK', '8_BP',
+          '95_MAS','79_KBB',  '38_KBB','94_MAS', '98_MJ',
+          '36_KBB','39_KBB', '104_PH', '43_KBB', 
+          '121_TR', '6_BM',
+          '28_JM','62_CA','96_MAS', '52_LE', '100_MR', '44_AC',
+          ],
+  'test': ['63_CA',  
+         '29_JM', 
+         '18_EM','33_KBB','71_HRA', '11_DHM','107_SA', '45_AC', '129_ZK'
+          ]
+  }
+
+data:
+  task: ${task} 
+  class: ${class}
+  first_subsampling:  ${first_subsampling}
+  use_category: true
+  class_weight_method: "sqrt"
+
+wandb:
+  entity: ''
+  log: true
+  name: 'MGO_fs_P3_S0.02_0.001_v2.2'
+  notes: 'Global Scaled Data'
+  type: 'T3.3'
+  version: 'v3'
+  project: 'aneurysm_segmentation'
+  public: true
+pretty_print: false
+selection_stage: ''
+
+tracker_options:
+  full_res: false
+  make_submission: false
+  track_boxes: true
+
+# lr_scheduler:
+#   class: ExponentialLR
+#   params:
+#     gamma: 0.9885
+
+# lr_scheduler: -1
+update_lr_scheduler_on: on_epoch
+
+training:
+  batch_size: 2
+  checkpoint_dir: ''
+  cuda: 0
+  enable_cudnn: true
+  epochs: 100
+  num_workers: 0
+  optim:
+    base_lr: 0.001
+    grad_clip: -1
+    lr_scheduler: ${lr_scheduler}
+    lr_clip: 1.0e-05
+    # decay_step: 2
+    optimizer:
+      class: Adam
+      params:
+        # momentum: 0.98
+        lr: ${training.optim.base_lr}
+    bn_scheduler:
+      bn_policy: step_decay
+      params:
+        bn_clip: 0.01
+        bn_decay: 0.9
+        bn_momentum: 0.1
+        decay_step: 10
+  precompute_multi_scale: true
+  shuffle: true
+  weight_name: miou
+
+debugging:
+  early_break: true
+  find_neighbour_dist: false
+  num_batches: 50
+  profiling: false
+
+tensorboard:
+  log: false
+
+visualization:
+  activate: true
+  deterministic: true
+  format: pointcloud
+  num_samples_per_epoch: 1
+  saved_keys:
+    pos:
+    - - x
+      - float
+    - - y
+      - float
+    - - z
+      - float
+    pred:
+    - - p
+      - float
+    y:
+    - - l
+      - float
+
+
+model_name: KPConvPaper
+
+models:
+  KPConvPaper:
+    class: kpconv.KPConvPaper
+    conv_type: "PARTIAL_DENSE"
+    use_category: ${data.use_category}
+    define_constants:
+      in_grid_size: ${data.first_subsampling}
+      in_feat: 64
+      bn_momentum: 0.02
+    down_conv:
+      n_kernel_points: 15
+      down_conv_nn:
+        [
+          [ [ FEAT + 1, in_feat ], [ in_feat, 2*in_feat ] ],
+          [ [ 2*in_feat, 2*in_feat ], [ 2*in_feat, 4*in_feat ] ],
+          [ [ 4*in_feat, 4*in_feat ], [ 4*in_feat, 8*in_feat ] ],
+          [ [ 8*in_feat, 8*in_feat ], [ 8*in_feat, 16*in_feat ] ],
+          [ [ 16*in_feat, 16*in_feat ], [ 16*in_feat, 32*in_feat ] ],
+        ]
+      grid_size:
+        [
+          [ in_grid_size, in_grid_size ],
+          [ 2*in_grid_size, 2*in_grid_size ],
+          [ 4*in_grid_size, 4*in_grid_size ],
+          [ 8*in_grid_size, 8*in_grid_size ],
+          [ 16*in_grid_size, 16*in_grid_size ],
+        ]
+      prev_grid_size:
+        [
+          [ in_grid_size, in_grid_size ],
+          [ in_grid_size, 2*in_grid_size ],
+          [ 2*in_grid_size, 4*in_grid_size ],
+          [ 4*in_grid_size, 8*in_grid_size ],
+          [ 8*in_grid_size, 16*in_grid_size ],
+        ]
+      block_names:
+        [
+          [ "SimpleBlock", "ResnetBBlock" ],
+          [ "ResnetBBlock", "ResnetBBlock" ],
+          [ "ResnetBBlock", "ResnetBBlock" ],
+          [ "ResnetBBlock", "ResnetBBlock" ],
+          [ "ResnetBBlock", "ResnetBBlock" ],
+        ]
+      has_bottleneck:
+        [ [ False, True ], [ True, True ], [ True, True ], [ True, True ], [ True, True ] ]
+      deformable:
+        [
+          [ False, False ],
+          [ False, False ],
+          [ False, False ],
+          [ False, False ],
+          [ False, False ],
+        ]
+      max_num_neighbors: [ [ 25, 25 ], [ 25, 30 ], [ 30, 38 ], [ 38, 38 ], [ 38, 38 ] ]
+      module_name: KPDualBlock
+    up_conv:
+      module_name: FPModule_PD
+      up_conv_nn:
+        [
+          [ 32*in_feat + 16*in_feat, 8*in_feat ],
+          [ 8*in_feat + 8*in_feat, 4*in_feat ],
+          [ 4*in_feat + 4*in_feat, 2*in_feat ],
+          [ 2*in_feat + 2*in_feat, in_feat ],
+        ]
+      skip: True
+      up_k: [ 1, 1, 1, 1 ]
+      bn_momentum:
+        [ bn_momentum, bn_momentum, bn_momentum, bn_momentum, bn_momentum ]
+    mlp_cls:
+      nn: [ in_feat, in_feat ]
+      dropout: 0
+      bn_momentum: bn_momentum
+    loss_weights:
+      lambda_reg: 0

@@ -7,7 +7,7 @@ checkpoint_dir: "/workspace/Storage_fast/AneurysmSegmentation" # "{your_path}/ou
 model_name: KPConvPaper
 enable_dropout: False
 output_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/scripts/visualization/out" # Where the output goes
-input_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/scripts/visualization/test_data" # Folder where to find the data
+input_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/datasets/data/aneurysm/raw" # Folder where to find the data
 
 parts_to_segment: 4
 features_to_include: {"mean_curvature":0, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
@@ -22,7 +22,7 @@ data:
     forward_category: "aneur"
     # use_category: "aneur"
 
-forward_pid: '18_EM'
+forward_pid: '107_SA'
 raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '6_BM', '7_BP', '8_BP', '9_KBW', '10_SUM',
       '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM',
       '19_EM', '20_EM', '21_FA', '22_FA', '23_HJ', '24_HJ', '25_HM',

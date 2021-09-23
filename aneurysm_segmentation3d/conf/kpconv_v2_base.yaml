@@ -22,9 +22,10 @@ train_transforms:                             # Data augmentation pipeline
 #     - lparams: 
 #       - 8000
 #       transform: FixedPoints
-parts_to_segment: 4
-features_to_include: {"mean_curvature":0, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
+parts_to_segment: 5
+features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
 class_weight_method: "log"
+scaler_type: "local" #global or local
 
 raw_file_identifiers: ['2_BC', '3_BC', '4_BC', '6_BM', '7_BP', '8_BP', '9_KBW', '10_SUM',
       '11_DHM', '12_GAW', '13_PMM', '14_TR', '15_TR', '16_TR', '18_EM',
@@ -78,10 +79,10 @@ data:
 
 wandb:
   entity: ''
-  log: false
+  log: true
   name: 'MGFO_s_P4_S0.02_0.001_v2.2'
   notes: 'Smoothed data'
-  type: 'T3.4'
+  type: 'T5.3'
   version: 'v2.2'
   project: 'aneurysm_segmentation'
   public: true
@@ -106,7 +107,7 @@ training:
   checkpoint_dir: ''
   cuda: 0
   enable_cudnn: true
-  epochs: 25
+  epochs: 200
   num_workers: 0
   optim:
     base_lr: 0.001

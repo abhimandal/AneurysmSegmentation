@@ -9,10 +9,10 @@ enable_dropout: False
 output_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/scripts/visualization/out" # Where the output goes
 input_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3d/datasets/data/aneurysm/raw" # Folder where to find the data
 
-parts_to_segment: 4
-features_to_include: {"mean_curvature":0, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
+parts_to_segment: 5
+features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
 class_weight_method: "log"
-
+scaler_type: "local" #global or local
 # Dataset specific
 defaults:
     - dataset: ""

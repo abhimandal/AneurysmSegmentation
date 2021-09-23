@@ -61,12 +61,14 @@ class _ForwardAneurysm(torch.utils.data.Dataset):
         custom_features_dict={"shot": True},
         num_parts_to_segment=5,
         shuffled_splits=None,
+        scaler_type="global",
     ):
         super().__init__()
         self.shuffled_splits = shuffled_splits
         self.raw_file_identifiers = raw_file_identifiers
         self.custom_features_dict = custom_features_dict
         self.num_parts_to_segment = num_parts_to_segment
+        self.scaler_type = scaler_type
 
         self._category = category
         self._path = path
@@ -87,6 +89,7 @@ class _ForwardAneurysm(torch.utils.data.Dataset):
                 filepath,
                 self.custom_features_dict,
                 self.num_parts_to_segment,
+                self.scaler_type,
             )
         )
         pos = data[:, :3]
@@ -146,6 +149,7 @@ class ForwardAneurysmDataset(BaseDataset):
             "parts_to_segment", False
         )
         self.cat_to_seg = {"aneur": np.arange(num_parts_to_segment)}
+        scaler_type = dataset_opt.get("scaler_type", False)
         predict_sample_pid = dataset_opt.get("forward_pid", False)
 
         # forward specific
@@ -195,6 +199,7 @@ class ForwardAneurysmDataset(BaseDataset):
             raw_file_identifiers=raw_file_identifiers,
             custom_features_dict=custom_features_dict,
             num_parts_to_segment=num_parts_to_segment,
+            scaler_type=scaler_type,
             shuffled_splits=shuffled_splits,
         )
 

@@ -263,11 +263,18 @@ def read_mesh_vertices(
         )
 
         # Categorize the WSS to different parts for part-segmentation
-        df["WSS"] = pd.cut(
-            df["WSS"],
-            bins=np.linspace(0, 1, num_parts_to_segment + 1),
-            labels=np.arange(0, num_parts_to_segment),
-        )
+        if scaler_type == "global":
+            df["WSS"] = pd.cut(
+                df["WSS"],
+                bins=[0.0, 0.01, 0.05, 0.1, 0.2, 1.0],
+                labels=np.arange(0, num_parts_to_segment),
+            )
+        else:
+            df["WSS"] = pd.cut(
+                df["WSS"],
+                bins=np.linspace(0, 1, num_parts_to_segment + 1),
+                labels=np.arange(0, num_parts_to_segment),
+            )
 
         vertices = np.empty((0, df.shape[1]), dtype=np.float32)
         # Stack all the vertices

@@ -22,8 +22,8 @@ train_transforms:                             # Data augmentation pipeline
 #     - lparams: 
 #       - 8000
 #       transform: FixedPoints
-parts_to_segment: 10
-features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":0,"shot":0, "rf":0, "ones":1}
+parts_to_segment: 5
+features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
 class_weight_method: "log"
 scaler_type: "global" #global or local
 
@@ -81,10 +81,10 @@ data:
 wandb:
   entity: ''
   log: true
-  name: 'MGO_fs_P3_S0.02_0.001_v2.2'
-  notes: 'Global Scaled Data'
+  name: 'MGFO_s_P5_S0.02_0.001_v3.2_R3'
+  notes: 'Global scaled data Unscaled division [0.0, 0.01, 0.05, 0.1, 0.2, 1.0]'
   type: 'T3.3'
-  version: 'v3'
+  version: 'v3.2'
   project: 'aneurysm_segmentation'
   public: true
 pretty_print: false
@@ -130,7 +130,7 @@ training:
         decay_step: 10
   precompute_multi_scale: true
   shuffle: true
-  weight_name: miou
+  weight_name: loss # Used during resume, select with model to load from [miou, macc, acc, loss..., latest]
 
 debugging:
   early_break: true

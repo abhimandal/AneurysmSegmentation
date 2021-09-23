@@ -19,6 +19,7 @@ _build
 **/conf/config_run.yaml
 **/viz/**
 **/tensorboard/
+**/checkpoint/
 **/data/aneurysm/**
 *.pyc
 __pycache__

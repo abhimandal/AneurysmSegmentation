@@ -80,7 +80,7 @@ data:
 
 wandb:
   entity: ''
-  log: true
+  log: false
   name: 'MGFO_s_P5_S0.02_0.001_v3.2_R3'
   notes: 'Global scaled data Unscaled division [0.0, 0.01, 0.05, 0.1, 0.2, 1.0]'
   type: 'T3.3'

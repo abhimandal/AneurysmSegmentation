@@ -5,6 +5,8 @@ import pyvista as pv
 import pandas as pd
 import numpy as np
 import shutil
+import pathlib
+
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -83,6 +85,14 @@ else:
     DST_CONFIG = os.path.join(BASE_DIR, "conf/config_run.yaml")
     params.config_run_path = DST_CONFIG  # make entry in config
     shutil.copy(SRC_CONFIG, DST_CONFIG)
+
+    pathlib.Path(
+        os.path.join(BASE_DIR, f"checkpoint/{params.wandb.name}")
+    ).mkdir(parents=True, exist_ok=True)
+    DST_CONFIG2 = os.path.join(
+        BASE_DIR, f"checkpoint/{params.wandb.name}/chkp_config.yaml"
+    )
+    shutil.copy(SRC_CONFIG, DST_CONFIG2)
 
 
 # Delete older files

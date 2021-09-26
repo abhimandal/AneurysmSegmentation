@@ -266,7 +266,7 @@ def read_mesh_vertices(
         if scaler_type == "global":
             df["WSS"] = pd.cut(
                 df["WSS"],
-                bins=[0.0, 0.01, 0.05, 0.1, 0.2, 1.0],
+                bins=[0.0, 0.02, 0.09, 1.0],
                 labels=np.arange(0, num_parts_to_segment),
             )
         else:
@@ -599,11 +599,21 @@ class AneurysmDataset(BaseDataset):
             is_test=is_test,
         )
 
-        if dataset_opt.class_weight_method:
-            self.add_weights(
-                class_weight_method=dataset_opt.class_weight_method
-            )
+        # if dataset_opt.class_weight_method:
+        #     self.add_weights(
+        #         class_weight_method=dataset_opt.class_weight_method
+        #     )
 
+        if dataset_opt.class_weight_type == "custom":
+            weights = torch.tensor(dataset_opt.custom_class_weight)
+            setattr(self.train_dataset, "weight_classes", weights)
+            setattr(self.val_dataset, "weight_classes", weights)
+        else:
+            if dataset_opt.class_weight_method:
+                self.add_weights(
+                    class_weight_method=dataset_opt.class_weight_method
+                )
+            
         # self._categories = self.train_dataset.categories
 
     @property  # type: ignore

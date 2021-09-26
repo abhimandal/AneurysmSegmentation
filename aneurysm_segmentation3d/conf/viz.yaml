@@ -12,7 +12,9 @@ input_path: "/workspace/Storage_fast/AneurysmSegmentation/aneurysm_segmentation3
 parts_to_segment: 5
 features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
 class_weight_method: "log"
-scaler_type: "local" #global or local
+class_weight_type: "custom" #custom or automatic
+custom_class_weight: [0.01,0.01,0.98]
+scaler_type: "global" #global or local
 # Dataset specific
 defaults:
     - dataset: ""

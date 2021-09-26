@@ -248,7 +248,7 @@ class Trainer:
                 "/",
                 self._cfg.training.epochs,
             )
-
+            # self._dataset.weight_classes = torch.tensor([0.01, 0.01, 0.98])
             train_per_class_iou = {}
             val_per_class_iou = {}
             test_per_class_iou = {}

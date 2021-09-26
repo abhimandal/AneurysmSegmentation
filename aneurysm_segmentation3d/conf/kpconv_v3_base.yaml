@@ -22,9 +22,11 @@ train_transforms:                             # Data augmentation pipeline
 #     - lparams: 
 #       - 8000
 #       transform: FixedPoints
-parts_to_segment: 5
+parts_to_segment: 3
 features_to_include: {"mean_curvature":1, "gauss_curvature":1, "fpfh":1,"shot":0, "rf":0, "ones":1}
 class_weight_method: "log"
+class_weight_type: "custom" #custom or automatic
+custom_class_weight: [0.01,0.01,0.98]
 scaler_type: "global" #global or local
 
 
@@ -58,16 +60,18 @@ shuffled_splits:
          '42_KBB','114_SR', '115_SR','41_KBB','76_JM','13_PMM','14_TR','40_KBB',
          '54_MR', '12_GAW', '9_KBW','99_MM','92_MAS', '46_LE','37_KBB','119_TI',
          '65_FU', '22_FA',  '21_FA','57_SF','88_KR','90_BMW', '34_KBB',
-         '60_BL','81_KBB','58_SI',], 
+         '60_BL','81_KBB','58_SI',
+         '23_HJ','7_BP','64_CA','24_HJ', '117_TI', '20_EM', '125_VT','85_KG','59_SI', '47_LE','72_HRA', #Added later
+         ], 
   'val': ['77_KA','83_KBB', '51_LE','74_HS','1_AK', '8_BP',
           '95_MAS','79_KBB',  '38_KBB','94_MAS', '98_MJ',
           '36_KBB','39_KBB', '104_PH', '43_KBB', 
           '121_TR', '6_BM',
           '28_JM','62_CA','96_MAS', '52_LE', '100_MR', '44_AC',
           ],
-  'test': ['63_CA',  
-         '29_JM', 
-         '18_EM','33_KBB','71_HRA', '11_DHM','107_SA', '45_AC', '129_ZK'
+  'test': ['63_CA', '29_JM',
+         '18_EM','33_KBB','71_HRA', '11_DHM','107_SA', '45_AC', '129_ZK',
+          '128_WW', '131_ZK', #Added later
           ]
   }
 
@@ -81,10 +85,11 @@ data:
 wandb:
   entity: ''
   log: false
-  name: 'MGFO_s_P5_S0.02_0.001_v3.2_R3'
-  notes: 'Global scaled data Unscaled division [0.0, 0.01, 0.05, 0.1, 0.2, 1.0]'
+  name: 'MGFO_s_P3_v3.3'
+  # notes: 'Feature Selection'
+  notes: 'Global_Unscaled: [0.0, 0.02, 0.09, 1.0], weighted:[0.01,0.01,0.98]'
   type: 'T3.3'
-  version: 'v3.2'
+  version: 'v3.3'
   project: 'aneurysm_segmentation'
   public: true
 pretty_print: false
@@ -104,11 +109,11 @@ tracker_options:
 update_lr_scheduler_on: on_epoch
 
 training:
-  batch_size: 3
+  batch_size: 5
   checkpoint_dir: ''
   cuda: 0
   enable_cudnn: true
-  epochs: 10
+  epochs: 200
   num_workers: 0
   optim:
     base_lr: 0.001

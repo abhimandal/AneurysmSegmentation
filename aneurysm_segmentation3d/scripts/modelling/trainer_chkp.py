@@ -142,8 +142,6 @@ class Trainer:
             #     "aneur"
             # ] = np.arange(0, self._cfg.parts_to_segment).tolist()
 
-            
-            
             # def validate(run_config, data_config):
             #     """A checkpoint is considered as valid if it can recreate the model from
             #     a dataset config only"""
@@ -314,7 +312,13 @@ class Trainer:
                     iteration=float(time.time() - iter_start_time),
                 )
                 iter_data_time = time.time()
-
+                if (
+                    self.has_visualization
+                    and self._visualizer.is_active
+                ):
+                    self._visualizer.save_visuals(
+                        self._model.get_current_visuals()
+                    )
         self._finalize_epoch(epoch)
 
     def _test_epoch(self, epoch, stage_name: str):

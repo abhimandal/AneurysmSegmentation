@@ -1,7 +1,9 @@
-# aneurysm-segmentation
+# WSS prediction for Intracranial Aneurysms (IA) using 3D KPFCNN (KPConv) by [Thomas et al.](https://github.com/HuguesTHOMAS/KPConv) 
 
 
-Do 3D Deep learning Segmentation on 3D-Point data to predict WSS values for Intracranial Aneurysms
+Aim: Do 3D Deep learning part-segmentation on 3D-point cloud data to predict WSS values for Intracranial Aneurysms.
+
+DISCLAIMER: This work is done for partial fulfillment of the requirements of the Master of Science, Digital Engineering, Department of Computer Science, University Magdeburg, Germany
 
 
 The Project is divided into three main parts:
